@@ -17,6 +17,9 @@
 		6557EF16155181A900830335 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6557EEF6155181A800830335 /* Cocoa.framework */; };
 		6557EF1E155181A900830335 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF1C155181A900830335 /* InfoPlist.strings */; };
 		6557EF21155181A900830335 /* popTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF20155181A900830335 /* popTests.m */; };
+		6557EF2F15518A4300830335 /* run.php in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF2E15518A4300830335 /* run.php */; };
+		6557EF311551A6EE00830335 /* run.phpsh in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF301551A6EE00830335 /* run.phpsh */; };
+		657431301555895E00AA4B3B /* NSWindow+CDWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 6574312F1555895E00AA4B3B /* NSWindow+CDWindow.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,20 +38,24 @@
 		6557EEF9155181A800830335 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		6557EEFA155181A800830335 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		6557EEFB155181A800830335 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		6557EEFE155181A800830335 /* pop-Info.plist */ = {isa = PBXFileReference; path = "pop-Info.plist"; sourceTree = "<group>"; };
+		6557EEFE155181A800830335 /* pop-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "pop-Info.plist"; sourceTree = "<group>"; };
 		6557EF00155181A800830335 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		6557EF02155181A800830335 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		6557EF04155181A800830335 /* pop-Prefix.pch */ = {isa = PBXFileReference; path = "pop-Prefix.pch"; sourceTree = "<group>"; };
+		6557EF04155181A800830335 /* pop-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pop-Prefix.pch"; sourceTree = "<group>"; };
 		6557EF06155181A800830335 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
-		6557EF08155181A800830335 /* CDAppDelegate.h */ = {isa = PBXFileReference; path = CDAppDelegate.h; sourceTree = "<group>"; };
+		6557EF08155181A800830335 /* CDAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDAppDelegate.h; sourceTree = "<group>"; };
 		6557EF09155181A800830335 /* CDAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDAppDelegate.m; sourceTree = "<group>"; };
 		6557EF0C155181A900830335 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		6557EF13155181A900830335 /* popTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = popTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6557EF14155181A900830335 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
-		6557EF1B155181A900830335 /* popTests-Info.plist */ = {isa = PBXFileReference; path = "popTests-Info.plist"; sourceTree = "<group>"; };
+		6557EF1B155181A900830335 /* popTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "popTests-Info.plist"; sourceTree = "<group>"; };
 		6557EF1D155181A900830335 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		6557EF1F155181A900830335 /* popTests.h */ = {isa = PBXFileReference; path = popTests.h; sourceTree = "<group>"; };
+		6557EF1F155181A900830335 /* popTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = popTests.h; sourceTree = "<group>"; };
 		6557EF20155181A900830335 /* popTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = popTests.m; sourceTree = "<group>"; };
+		6557EF2E15518A4300830335 /* run.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; path = run.php; sourceTree = "<group>"; };
+		6557EF301551A6EE00830335 /* run.phpsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = run.phpsh; sourceTree = "<group>"; };
+		6574312E1555895E00AA4B3B /* NSWindow+CDWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSWindow+CDWindow.h"; sourceTree = "<group>"; };
+		6574312F1555895E00AA4B3B /* NSWindow+CDWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSWindow+CDWindow.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,6 +125,8 @@
 				6557EF09155181A800830335 /* CDAppDelegate.m */,
 				6557EF0B155181A900830335 /* MainMenu.xib */,
 				6557EEFD155181A800830335 /* Supporting Files */,
+				6574312E1555895E00AA4B3B /* NSWindow+CDWindow.h */,
+				6574312F1555895E00AA4B3B /* NSWindow+CDWindow.m */,
 			);
 			path = pop;
 			sourceTree = "<group>";
@@ -129,6 +138,8 @@
 				6557EEFF155181A800830335 /* InfoPlist.strings */,
 				6557EF02155181A800830335 /* main.m */,
 				6557EF04155181A800830335 /* pop-Prefix.pch */,
+				6557EF2E15518A4300830335 /* run.php */,
+				6557EF301551A6EE00830335 /* run.phpsh */,
 				6557EF05155181A800830335 /* Credits.rtf */,
 			);
 			name = "Supporting Files";
@@ -228,6 +239,8 @@
 				6557EF01155181A800830335 /* InfoPlist.strings in Resources */,
 				6557EF07155181A800830335 /* Credits.rtf in Resources */,
 				6557EF0D155181A900830335 /* MainMenu.xib in Resources */,
+				6557EF2F15518A4300830335 /* run.php in Resources */,
+				6557EF311551A6EE00830335 /* run.phpsh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,6 +277,7 @@
 			files = (
 				6557EF03155181A800830335 /* main.m in Sources */,
 				6557EF0A155181A800830335 /* CDAppDelegate.m in Sources */,
+				657431301555895E00AA4B3B /* NSWindow+CDWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,11 +340,12 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_ENABLE_OBJC_GC = unsupported;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -353,11 +368,12 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_ENABLE_OBJC_GC = unsupported;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -437,6 +453,7 @@
 				6557EF26155181A900830335 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		6557EF27155181A900830335 /* Build configuration list for PBXNativeTarget "popTests" */ = {
 			isa = XCConfigurationList;
@@ -445,6 +462,7 @@
 				6557EF29155181A900830335 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

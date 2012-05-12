@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+    echo "new NSObject" . PHP_EOL;
+    echo "exec window close" . PHP_EOL;
+    sleep(1);
+    
+    echo "new NSWindow b noInit" . PHP_EOL;
+    echo "exec b initWithContentRect:styleMask:backing:defer: @NSMakeRect(0,0,200,200) (uint)13 (uint)2 (int)1" . PHP_EOL;
+    
+//    echo "exec b makeKeyAndOrderFront: nil";
+    
+//    echo "get b";
+
+?>
+
+exec b makeKeyAndOrderFront: nil
+get b
+breakpoint b
+printf %@ b
