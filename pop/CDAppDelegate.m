@@ -19,10 +19,10 @@
     NSUInteger i;
     NSUInteger length = [pathParts count];
     NSMutableArray * arguments = [NSMutableArray arrayWithCapacity:length];
-    if(length == 3){
+    if(length == 2){
         return [NSArray array];
     }
-    for(i = 3; i<length; i++){
+    for(i = 2; i<length; i++){
         id newArgument;
         NSString * argumentIdentifier = [pathParts objectAtIndex:i];
         NSLog(@"arg: '%@'", argumentIdentifier);
@@ -66,11 +66,14 @@
     }
 }
 
+- (NSString *)transformString:(NSString *)inputString{
+    return [inputString stringByReplacingOccurrencesOfString:@"&nbsp%" withString:@" "];
+}
 
 - (void)handleSpecialArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index {
     if([argument hasPrefix:@"@NSMakeRect("]){
         NSUInteger length = [argument length] - 12 - 1;
-        argument = [[argument substringWithRange:NSMakeRange(11, length)] stringByReplacingOccurrencesOfString:@" " withString:@""];
+        argument = [[argument substringWithRange:NSMakeRange(12, length)] stringByReplacingOccurrencesOfString:@" " withString:@""];
         NSArray *rectPoints = [argument componentsSeparatedByString:@","];
         NSRect rect = NSMakeRect(
                                  [[rectPoints objectAtIndex:0] floatValue], 
@@ -79,6 +82,13 @@
                                  [[rectPoints objectAtIndex:3] floatValue]
                                  );
         [invocation setArgument:&rect atIndex:index];
+    } else if([argument hasPrefix:@"@\""] || [argument hasPrefix:@"@'"]){
+        NSUInteger length = [argument length] - 2 - 1;
+        argument = [argument substringWithRange:NSMakeRange(2, length)];
+        
+        argument = [self transformString:argument];
+        
+        [invocation setArgument:&argument atIndex:index];
     }
 }
 
@@ -100,8 +110,6 @@
         signature = [object methodSignatureForSelector:selector];
     }
     if (!signature) {
-//        NSWindow * awi = [NSWindow windowWithContentRect:NSMakeRect(0, 0, 200, 200) styleMask:0 backing:2 defer:NO];
-//        [awi makeKeyAndOrderFront:nil];
         NSLog(@"NSObject: Method signature could not be created.");
         return FALSE;
     }
@@ -186,6 +194,9 @@
 
 - (BOOL)identifierSignalsClass:(NSString *)identifier{
     // Check if the first character is upper case
+    if([identifier length] == 0){
+        return FALSE;
+    }
     unichar firstChar = [identifier characterAtIndex: 0]; //get the first character from the string.
     NSCharacterSet *upperCaseSet = [NSCharacterSet uppercaseLetterCharacterSet];
     if ([upperCaseSet characterIsMember: firstChar]){
@@ -204,9 +215,20 @@
         object = [self findObjectInPoolWithIdentifier:identifier];
     }
     if(!object){
-        object = [self valueForKeyPath:identifier];
+        if([self isKVCCompliantForKey:identifier]){
+            object = [self valueForKeyPath:identifier];
+        }
     }
     return object;
+}
+
+- (BOOL)isKVCCompliantForKey:(NSString *)keyPath{
+    NSArray * keyPathArray = [keyPath componentsSeparatedByString:@"."];
+    NSString * firstKey = [keyPathArray objectAtIndex:0];
+    if([self respondsToSelector:NSSelectorFromString(firstKey)]){
+        return TRUE;
+    }
+    return FALSE;
 }
 
 - (BOOL)parseCommandString:(NSString *)commandString{
@@ -226,7 +248,10 @@
         
         // Check if a third argument is given
         if([commandParts count] > 3){
-            if([[commandParts objectAtIndex:3] isEqualToString:@"noInit"]){
+            if([[commandParts objectAtIndex:3] isEqualToString:@"noInit"] || 
+               [[commandParts objectAtIndex:3] isEqualToString:@"true"] || 
+               [[commandParts objectAtIndex:3] isEqualToString:@"TRUE"] || 
+               [[commandParts objectAtIndex:3] isEqualToString:@"1"]){
                 init = FALSE;
             }
         }
@@ -245,39 +270,12 @@
         } else {
             object = [NSClassFromString(newClassName) alloc];
         }
-        
-        
-        [self updateObject:object forIdentifier:newIdentifier];
+        if(object){
+            [self updateObject:object forIdentifier:newIdentifier];
+        } else {
+            NSLog(@"Couldn't create object ob class %@", newClassName);
+        }
         NSLog(@"Object: %@", object);
-    } else if([command isEqualToString:@"exec"]){ // method execution
-        id object;
-        
-        NSString *objectIdentifier =    [[commandParts objectAtIndex:1] retain];
-        NSString *objectMethod =        [[commandParts objectAtIndex:2] retain];
-        NSArray * arguments =           [self commandPartsToArguments:commandParts];
-        
-        NSLog(@"Command parts: %@", commandParts);
-        
-        if([self identifierSignalsClass:objectIdentifier]){
-            targetIsClass = TRUE;
-            object = objectIdentifier;
-            NSLog(@"Got class: %@", objectIdentifier);
-        } else {
-            object = [self findObjectWithIdentifier:objectIdentifier];
-            NSLog(@"Got object: %@ for identifier '%@'", object, objectIdentifier);
-        }
-
-        if([arguments count] == 0){
-            NSLog(@"Perform selector (without args) %@", objectMethod);
-            [object performSelector:NSSelectorFromString(objectMethod) withObject:nil afterDelay:0.0];
-        } else if([self invokeMethodWithName:objectMethod onObject:object withArguments:arguments]){
-            NSLog(@"Did perform selector (with args) %@", objectMethod);
-        } else {
-            NSLog(@"Object doesn't respond to %@", objectMethod);
-        }
-        
-        [objectIdentifier release];
-        [objectMethod release];
     } else if([command isEqualToString:@"printf"]){ // echo
         NSString *format = [commandParts objectAtIndex:1];
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
@@ -293,24 +291,24 @@
         NSObject *newValue = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
         [self setObject:newValue inPoolWithIdentifier:objectIdentifier];
         
-    } else if([command isEqualToString:@"breakpoint"]){ // breakpoint
-        NSString *objectIdentifier = [commandParts objectAtIndex:1];
-        NSWindow * window = (NSWindow *)[self findObjectWithIdentifier:objectIdentifier];
-        [window makeKeyAndOrderFront:nil];
-        
-        NSWindow * newWin = [[NSWindow alloc] initWithContentRect: NSMakeRect(300, 300, 200, 100)
-                                             styleMask: (NSTitledWindowMask |
-                                                         NSMiniaturizableWindowMask |
-                                                         NSResizableWindowMask)
-                                               backing: NSBackingStoreBuffered
-                                                 defer: YES];
-        
-        NSLog(@"CuCu %u", (NSTitledWindowMask |
-                      NSMiniaturizableWindowMask |
-                      NSResizableWindowMask));
-        [newWin makeKeyAndOrderFront:nil];
-        [newWin setTitle: @"Hello World"];
-        
+//    } else if([command isEqualToString:@"breakpoint"]){ // breakpoint
+//        NSString *objectIdentifier = [commandParts objectAtIndex:1];
+//        NSWindow * window = (NSWindow *)[self findObjectWithIdentifier:objectIdentifier];
+//        [window makeKeyAndOrderFront:nil];
+//        
+//        NSWindow * newWin = [[NSWindow alloc] initWithContentRect: NSMakeRect(300, 300, 200, 100)
+//                                             styleMask: (NSTitledWindowMask |
+//                                                         NSMiniaturizableWindowMask |
+//                                                         NSResizableWindowMask)
+//                                               backing: NSBackingStoreBuffered
+//                                                 defer: YES];
+//        
+//        NSLog(@"CuCu %u", (NSTitledWindowMask |
+//                      NSMiniaturizableWindowMask |
+//                      NSResizableWindowMask));
+//        [newWin makeKeyAndOrderFront:nil];
+//        [newWin setTitle: @"Hello World"];
+//        
     } else if([command isEqualToString:@"breakpoint"]){ // breakpoint
         NSString *objectIdentifier = [commandParts objectAtIndex:1];
         id object = [self findObjectWithIdentifier:objectIdentifier];
@@ -333,33 +331,96 @@
         }
         exception = [NSException exceptionWithName:name reason:message userInfo:userInfo];
         @throw exception;
+    } else if([command isEqualToString:@"exec"]){ // method execution
+        NSMutableArray * shiftedCommandParts = [NSMutableArray arrayWithArray:commandParts];
+        [shiftedCommandParts removeObjectAtIndex:0];
+        
+        [self executeWithCommandParts:[NSArray arrayWithArray:shiftedCommandParts]];
+    } else if([self executeWithCommandParts:commandParts]){ // method execution
     } else { // Couldn't parse command
+        
         NSLog(@"Couldn't parse command %@", commandString);
         return FALSE;
     }
     return TRUE;
 }
 
+- (BOOL)executeWithCommandParts:(NSArray *)commandParts{
+    id object;
+    
+    NSString *objectIdentifier =    [[commandParts objectAtIndex:0] retain];
+    NSString *objectMethod =        [[commandParts objectAtIndex:1] retain];
+    NSArray * arguments =           [self commandPartsToArguments:commandParts];
+    
+    NSLog(@"Command parts: %@", commandParts);
+    
+    if([self identifierSignalsClass:objectIdentifier]){
+        targetIsClass = TRUE;
+        object = objectIdentifier;
+        NSLog(@"Got class: %@", objectIdentifier);
+    } else {
+        object = [self findObjectWithIdentifier:objectIdentifier];
+        NSLog(@"Got object: %@ for identifier '%@'", object, objectIdentifier);
+    }
+    
+    if([arguments count] == 0){
+        NSLog(@"Perform selector (without args) %@", objectMethod);
+        [object performSelector:NSSelectorFromString(objectMethod) withObject:nil afterDelay:0.0];
+    } else if([self invokeMethodWithName:objectMethod onObject:object withArguments:arguments]){
+        NSLog(@"Did perform selector (with args) %@", objectMethod);
+    } else {
+        NSLog(@"Object doesn't respond to %@", objectMethod);
+    }
+    
+    [objectIdentifier release];
+    [objectMethod release];
+    
+    return TRUE;
+}
+
 - (void)receiveData:(NSNotification *)aNotification{
+    static NSCharacterSet * illegalCharacters;
+    static NSCharacterSet * controlCharacters;
     NSData * data = [[aNotification userInfo] objectForKey:NSFileHandleNotificationDataItem];
-    NSString * commandString;
+    NSString * justReceivedCommand;
     
     targetIsClass = FALSE;
     
-//    NSLog(@"%@", aNotification);
-//    NSLog(@"%@", readHandle);
-//    NSLog(@"%@", [readHandle readDataToEndOfFile]);
-//    NSLog(@"%@", data);
+    if(!illegalCharacters){
+        illegalCharacters = [NSCharacterSet illegalCharacterSet];
+        controlCharacters = [NSCharacterSet controlCharacterSet];
+    }
     
     if([data length]){
-        commandString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        NSArray * commandLines = [commandString componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@";\n\r"]];
-//        NSArray * commandLines = [commandString componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
-        for(NSString * commandLineString in commandLines){
-            if([commandLineString length]){
-                [self parseCommandString:commandLineString];
+        justReceivedCommand = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] stringByTrimmingCharactersInSet:illegalCharacters];
+        
+        [commandQueue release];
+        commandQueue = [commandQueue stringByAppendingString:[justReceivedCommand stringByReplacingOccurrencesOfString:@"> " withString:@""]];
+        [commandQueue retain];
+        
+        // Check if there is a delimiter in the command queue
+        NSRange commandDelimiterRange = [commandQueue rangeOfCharacterFromSet:commandDelimiter];
+        if(commandDelimiterRange.location != NSNotFound){
+            // Handle the commands in the queue
+//            [commandQueue release];
+            commandQueue = [commandQueue stringByTrimmingCharactersInSet:illegalCharacters];
+//            [commandQueue retain];
+            NSArray * commandLines = [commandQueue componentsSeparatedByCharactersInSet:commandDelimiter];
+            for(NSString * commandLineString in commandLines){
+                if([commandLineString length]){
+                    commandLineString = [commandLineString stringByTrimmingCharactersInSet:controlCharacters];
+                    [self parseCommandString:commandLineString];
+                }
             }
+            [commandQueue release];
+            commandQueue = @"";
+        } else {
+            // Print the input to show what is typed
+//            NSLog(@"%@", justReceivedCommand);
+            printf("%s", [justReceivedCommand UTF8String]);
+            fflush(stdout);
         }
+        
     }
 
     if([task isRunning]){
@@ -381,15 +442,20 @@
     NSString * launchPath;
 	NSMutableArray * arguments;
 	
-    arguments = [NSArray arrayWithObjects:@"php", @"/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/run.php", nil];
+    if(!scriptPath){
+        scriptPath = @"/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/run.php";
+    }
+    arguments = [NSArray arrayWithObjects:@"php", scriptPath, nil];
     launchPath = @"/usr/bin/env";
     
-    launchPath = @"/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/run.phpsh";
-	
     // Init
     objectPool = [NSMutableDictionary dictionary];
     [objectPool retain];
     [objectPool setValue:[NSNull null] forKey:@"nil"];
+    
+    commandDelimiter = [[NSCharacterSet characterSetWithCharactersInString:@";\n\r"] retain];
+    commandQueue = @"";
+    
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadCompletionNotification object:nil];
     //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadToEndOfFileCompletionNotification object:nil];

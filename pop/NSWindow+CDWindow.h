@@ -10,5 +10,4 @@
 
 @interface NSWindow (CDWindow)
 + (id)windowWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
-- (void)doesNotRecognizeSelector:(SEL)aSelector;
 @end
