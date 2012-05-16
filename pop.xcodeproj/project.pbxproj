@@ -19,6 +19,7 @@
 		6557EF21155181A900830335 /* popTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF20155181A900830335 /* popTests.m */; };
 		6557EF2F15518A4300830335 /* run.php in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF2E15518A4300830335 /* run.php */; };
 		6557EF311551A6EE00830335 /* run.phpsh in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF301551A6EE00830335 /* run.phpsh */; };
+		65E359611564302E007BD73C /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 65E359601564302E007BD73C /* LICENSE */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,7 @@
 		6557EF20155181A900830335 /* popTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = popTests.m; sourceTree = "<group>"; };
 		6557EF2E15518A4300830335 /* run.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; path = run.php; sourceTree = "<group>"; };
 		6557EF301551A6EE00830335 /* run.phpsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = run.phpsh; sourceTree = "<group>"; };
+		65E359601564302E007BD73C /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,6 +138,7 @@
 				6557EF2E15518A4300830335 /* run.php */,
 				6557EF301551A6EE00830335 /* run.phpsh */,
 				6557EF05155181A800830335 /* Credits.rtf */,
+				65E359601564302E007BD73C /* LICENSE */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -236,6 +239,7 @@
 				6557EF0D155181A900830335 /* MainMenu.xib in Resources */,
 				6557EF2F15518A4300830335 /* run.php in Resources */,
 				6557EF311551A6EE00830335 /* run.phpsh in Resources */,
+				65E359611564302E007BD73C /* LICENSE in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -24,6 +24,8 @@ typedef enum {
     NSString *commandQueue;
     NSCharacterSet *commandDelimiter;
     
+    NSTimer *interactiveLoopTimer;
+    
     NSMutableDictionary *objectPool;
     BOOL targetIsClass;
 }
@@ -31,6 +33,7 @@ typedef enum {
 
 @property (assign) IBOutlet NSWindow *window;
 @property (retain) NSMutableDictionary *objectPool;
+@property (retain) NSTimer *interactiveLoopTimer;
 
 - (NSArray *)commandPartsToArguments:(NSArray *)pathParts;
 
@@ -55,7 +58,7 @@ typedef enum {
 - (void)taskDidTerminate:(NSNotification *)notif;
 
 - (BOOL)runInteractive;
--(void)runInteractiveLoop:(NSTimer *)aTimer;
+- (void)runInteractiveLoop:(NSTimer *)aTimer;
 
 
 - (void)handleSimpleArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index;

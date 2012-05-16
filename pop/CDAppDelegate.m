@@ -7,12 +7,14 @@
 //
 
 #import "CDAppDelegate.h"
-#import "NSWindow+CDWindow.m"
+
+#define kCDInteractiveTimerInterval 0.1
 
 @implementation CDAppDelegate
 
 @synthesize window = _window;
 @synthesize objectPool;
+@synthesize interactiveLoopTimer;
 
 
 - (NSArray *)commandPartsToArguments:(NSArray *)pathParts{
@@ -235,11 +237,12 @@
     NSArray *commandParts = [commandString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSString *command = [commandParts objectAtIndex:0];
     
+#if DEBUG
     NSLog(@"Parsing command string '%@'", commandString);
+#endif
     
     // Handle the commands
     if([command isEqualToString:@"#"] || [commandString hasPrefix:@">"]){ // comments
-        NSLog(@"readline");
     } else if([command isEqualToString:@"new"]){ // object creation
         id object;
         BOOL init = TRUE;
@@ -263,8 +266,9 @@
             newIdentifier = newClassName;
         }
         
-        
+#if DEBUG        
         NSLog(@"New class: '%@'", newClassName);
+#endif
         if(init){
             object = [[NSClassFromString(newClassName) alloc] init];
         } else {
@@ -275,7 +279,9 @@
         } else {
             NSLog(@"Couldn't create object ob class %@", newClassName);
         }
+#if DEBUG
         NSLog(@"Object: %@", object);
+#endif
     } else if([command isEqualToString:@"printf"]){ // echo
         NSString *format = [commandParts objectAtIndex:1];
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
@@ -319,7 +325,6 @@
         [self executeWithCommandParts:[NSArray arrayWithArray:shiftedCommandParts]];
     } else if([self executeWithCommandParts:commandParts]){ // method execution
     } else { // Couldn't parse command
-        
         NSLog(@"Couldn't parse command %@", commandString);
         return FALSE;
     }
@@ -329,7 +334,9 @@
 - (BOOL)executeWithCommandParts:(NSArray *)commandParts{
     id object;
 
+#if DEBUG
     NSLog(@"Command parts: %@", commandParts);
+#endif
     
     if(commandParts.count < 2){
         return FALSE;
@@ -343,23 +350,26 @@
     if([self identifierSignalsClass:objectIdentifier]){
         targetIsClass = TRUE;
         object = objectIdentifier;
-        NSLog(@"Got class: %@", objectIdentifier);
-    } else if((object = [self findObjectWithIdentifier:objectIdentifier])){
+    } else if(!(object = [self findObjectWithIdentifier:objectIdentifier])){
+#if DEBUG
         NSLog(@"No object");
+#endif
     }
     
     if([arguments count] == 0){
+#if DEBUG
         NSLog(@"Perform selector (without args) %@", objectMethod);
+#endif
         [object performSelector:NSSelectorFromString(objectMethod) withObject:nil afterDelay:0.0];
     } else if([self invokeMethodWithName:objectMethod onObject:object withArguments:arguments]){
+#if DEBUG
         NSLog(@"Did perform selector (with args) %@", objectMethod);
+#endif
     } else {
+#if DEBUG
         NSLog(@"Object doesn't respond to %@", objectMethod);
+#endif
     }
-    
-    [objectIdentifier release];
-    [objectMethod release];
-    
     return TRUE;
 }
 
@@ -393,7 +403,7 @@
             NSArray * commandLines = [commandQueue componentsSeparatedByCharactersInSet:commandDelimiter];
             for(NSString * commandLineString in commandLines){
                 if([commandLineString length]){
-                    commandLineString = [commandLineString stringByTrimmingCharactersInSet:controlCharacters];
+                    commandLineString = [[commandLineString stringByTrimmingCharactersInSet:controlCharacters] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
                     [self parseCommandString:commandLineString];
                 }
             }
@@ -414,18 +424,21 @@
 
 -(void)taskDidTerminate:(NSNotification *)notif{
 	int status = [task terminationStatus];
+    
+#if DEBUG
 	if(status == 0){
 		NSLog(@"Task succeeded.");
 	} else {
 		NSLog(@"Task failed.");
 	}
+#endif
 }
 
 -(NSString *)cleanupString:(NSString *)input{
     static NSRegularExpression *regex;
     if(!regex){
         NSError * error = NULL;
-        regex = [NSRegularExpression regularExpressionWithPattern:@"[^0-9a-z|;|-|!|$|%|=|*|+|\\.|:| |_|@|\"|'|´|`|#|/|\\|]"
+        regex = [NSRegularExpression regularExpressionWithPattern:@"[^0-9a-z|;|,|-|!|$|%|=|*|+|\\.|:| |_|@|\"|'|´|`|#|/|\\(|\\)|\\|]"
                                                           options:NSRegularExpressionCaseInsensitive
                                                             error:&error];
         if(error){
@@ -433,7 +446,6 @@
             @throw error;
         }
     }
-        
     NSString *modifiedString = [regex stringByReplacingMatchesInString:input
                                                                options:0
                                                                  range:NSMakeRange(0, [input length])
@@ -441,6 +453,27 @@
     return modifiedString;
 }
 -(BOOL)runInteractive{
+    NSTimeInterval timeInterval = (NSTimeInterval) 0.1;
+    uint64_t timeInterval_gcd;
+    timeInterval_gcd = timeInterval * NSEC_PER_SEC;
+    
+    // Info: http://libdispatch.macosforge.org/trac/wiki/tutorial#Respondingtoevents:Sources
+    dispatch_queue_t queue	= dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+    if(!source){
+        @throw [NSException exceptionWithName:@"No source" reason:@"Source couldn't be created" userInfo:nil];
+    }
+    dispatch_source_set_timer(source, 0, timeInterval_gcd, 0);
+    
+    void (^runInteractiveBlock)(void);
+    runInteractiveBlock = ^(void) {
+        [self runInteractiveLoop:nil];
+    };
+    
+    
+    dispatch_source_set_event_handler(source, runInteractiveBlock);
+    dispatch_resume(source);
     
     
     printf("POP Interactive Console (Version 0.1.0)\n\
@@ -450,13 +483,20 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
 //    }
     
 //    NSTimer *runLoopTimer = 
-    [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(runInteractiveLoop:) userInfo:nil repeats:YES];
+//    [self performSelector:@selector(runInteractiveLoop:) withObject:nil afterDelay:kCDInteractiveTimerInterval];
+//    [self performSelectorOnMainThread:@selector(runInteractiveLoop:) withObject:nil waitUntilDone:NO];
+    
+//    [NSThread detachNewThreadSelector:@selector(runInteractiveLoop:) toTarget:self withObject:nil];
+//    [timer performSelector:@selector(invalidate) onThread:timerThread withObject:nil waitUntilDone:NO];
+    
+//    interactiveLoopTimer = [NSTimer scheduledTimerWithTimeInterval:kCDInteractiveTimerInterval target:self selector:@selector(runInteractiveLoop:) userInfo:nil repeats:YES];
     return TRUE;
 }
 
 -(void)runInteractiveLoop:(NSTimer *)aTimer{
-    char buffer[1024];
+    char buffer[8192];
     NSString *commandString;
+    NSArray * commandLines;
     static NSCharacterSet *newlineCharacterSet;
     
     if(!newlineCharacterSet){
@@ -465,111 +505,107 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     
     printf("> ");
     
-    fgets(buffer, 100, stdin);
-    commandString = [self cleanupString:[[NSString stringWithCString:buffer encoding:NSUTF8StringEncoding] 
-                                         stringByTrimmingCharactersInSet:newlineCharacterSet]];
+    fgets(buffer, 8192, stdin);
+    commandString = [self cleanupString:[NSString stringWithCString:buffer encoding:NSUTF8StringEncoding]];
     
     if(commandString.length == 0){
         // Do nothing
-        return;
     } else if([commandString isEqualToString:@"help"]){
-        printf("POP Help:\n\
-               Creating:    'new NSWindow variableName [noInit]'   Creates a new object (Set 'noInit' if you only wont to alloc)\n\
-               Execution:   'exec variableName method' or 'exec variableName method arg0 ... argN'    Executes the method on the object\n\
-               printf:      'printf format variableName'           Prints a formatted string [ = printf(format, variableName) ]\n\
-               echo:        'echo variableName'                    Logs the value from variableName [ = NSLog ]\n\
-               get:         'get variableName'                     Currently the same as \"echo\"\n\
-               set:         'set variableName newValue'            Sets the newValue for the variableName\n\
-               ");     
+        printf("POP Help:\n Creating:    'new NSWindow variableName [noInit]'   Creates a new object (Set 'noInit' if you only wont to alloc)\n Execution:   'exec variableName method' or 'exec variableName method arg0 ... argN'    Executes the method on the object\n printf:      'printf format variableName'           Prints a formatted string [ = printf(format, variableName) ]\n echo:        'echo variableName'                    Logs the value from variableName [ = NSLog ]\n get:         'get variableName'                     Currently the same as \"echo\"\n set:         'set variableName newValue'            Sets the newValue for the variableName\n");     
     } else if([commandString isEqualToString:@"copyright"]){
         printf("(c) 2012 Corn Daniel\n");
     } else if([commandString isEqualToString:@"license"]){
-        printf("Copyright (c) 2012 Corn Daniel\n\
-               \n\
-               Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\
-               \n\
-               The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\
-               \n\
-               THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\
-               ");
+        printf("Copyright (c) 2012 Corn Daniel\n\nPermission is hereby granted, free of charge, to any person obtaining a copy \nof this software and associated documentation files (the \"Software\"), to deal \nin the Software without restriction, including without limitation the rights to use, \ncopy, modify, merge, publish, distribute, sublicense, and/or sell copies of the \nSoftware, and to permit persons to whom the Software is furnished to do so, \nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all \ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY \nKIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE \nWARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR \nPURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS \nOR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR \nOTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR \nOTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE \nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n");
     } else if([commandString isEqualToString:@"exit"]){
         printf("Goodbye\n");
         [[NSApplication sharedApplication] terminate:self];
     } else {
-        [self parseCommandString:commandString];
-    }
-        
-}
-
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
-{
-    NSString * launchPath;
-	NSMutableArray * arguments;
-    
-    NSArray *args = [[NSProcessInfo processInfo] arguments];
-    for(NSString *processArgument in args){
-        if([processArgument isEqualToString:@"-a"]){
-            mode = CDPopModeInteractive;
+        commandLines = [commandString componentsSeparatedByCharactersInSet:commandDelimiter];
+        for(NSString * commandLineString in commandLines){
+            commandLineString = [commandLineString stringByTrimmingCharactersInSet:newlineCharacterSet];
+            if([commandLineString length]){
+                [self parseCommandString:commandLineString];
+            }
         }
     }
-    
-    // Init
-    objectPool = [NSMutableDictionary dictionary];
-    [objectPool retain];
-    [objectPool setValue:[NSNull null] forKey:@"nil"];
-    
-    commandDelimiter = [[NSCharacterSet characterSetWithCharactersInString:@";\n\r"] retain];
-    commandQueue = @"";
-    
-    // Change to interactive mode if configured
-    if(mode == CDPopModeInteractive){
-        [self runInteractive];
-        return;
-    }
-    
-    if(!scriptPath){
-        scriptPath = @"/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/run.php";
-    }
-    arguments = [NSArray arrayWithObjects:@"php", scriptPath, nil];
-    launchPath = @"/usr/bin/env";
-    
-    
-    
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadCompletionNotification object:nil];
-    //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadToEndOfFileCompletionNotification object:nil];
-    
-    // Register for task termination
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:nil];
-    
-	NSLog(@"Call script %@ with arguments: %@", launchPath, arguments);
-	if(task){
-		task = nil;
-	}
-	task = [[NSTask alloc] init];
-	
-	NSPipe *outputPipe = [NSPipe pipe];
-	readHandle = [outputPipe fileHandleForReading];
-    NSLog(@"Read using handle: %i", [readHandle fileDescriptor]);
-    
-	[task setLaunchPath:launchPath];
-	[task setStandardOutput:outputPipe];
-    //	[task setStandardInput:inputPipe];
-	[task setArguments:arguments];
-	[task setCurrentDirectoryPath:@"~"];
-	
-    //	NSLog(@"%@",[task environment]);
-	[task setEnvironment:[NSDictionary dictionaryWithObjectsAndKeys:@"/tmp/launch-ooAfUm/Listeners", @"SSH_AUTH_SOCK", nil]];
-    //	NSLog(@"%@",[task environment]);
-	
-	@try{
-		[task launch];
-	} @catch(NSException * e){
-		NSLog(@"Exc: %@",e);
-	}
-	
-//	[readHandle readToEndOfFileInBackgroundAndNotify];
-    [readHandle readInBackgroundAndNotify];
+//    [self performSelector:@selector(runInteractiveLoop:) withObject:nil afterDelay:kCDInteractiveTimerInterval];
+//    [self performSelectorOnMainThread:@selector(runInteractiveLoop:) withObject:nil waitUntilDone:NO];
 }
 
+-(id)init{
+    self = [super init];
+    if(self){
+        NSString * launchPath;
+        NSMutableArray * arguments;
+        
+        NSArray *args = [[NSProcessInfo processInfo] arguments];
+        for(NSString *processArgument in args){
+            if([processArgument isEqualToString:@"-a"]){
+                mode = CDPopModeInteractive;
+            }
+        }
+        
+        // Init
+        objectPool = [NSMutableDictionary dictionary];
+        [objectPool retain];
+        [objectPool setValue:[NSNull null] forKey:@"nil"];
+        
+        commandDelimiter = [[NSCharacterSet characterSetWithCharactersInString:@";\n\r"] retain];
+        commandQueue = @"";
+        
+        // Change to interactive mode if configured
+        if(mode == CDPopModeInteractive){
+            [self runInteractive];
+            return self;
+        }
+        
+        if(!scriptPath){
+            scriptPath = @"/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/run.php";
+        }
+        arguments = [NSArray arrayWithObjects:@"php", scriptPath, nil];
+        launchPath = @"/usr/bin/env";
+        
+        
+        
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadCompletionNotification object:nil];
+        //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadToEndOfFileCompletionNotification object:nil];
+        
+        // Register for task termination
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:nil];
+        
+        NSLog(@"Call script %@ with arguments: %@", launchPath, arguments);
+        if(task){
+            task = nil;
+        }
+        task = [[NSTask alloc] init];
+        
+        NSPipe *outputPipe = [NSPipe pipe];
+        readHandle = [outputPipe fileHandleForReading];
+        NSLog(@"Read using handle: %i", [readHandle fileDescriptor]);
+        
+        [task setLaunchPath:launchPath];
+        [task setStandardOutput:outputPipe];
+        //	[task setStandardInput:inputPipe];
+        [task setArguments:arguments];
+        [task setCurrentDirectoryPath:@"~"];
+        
+        //	NSLog(@"%@",[task environment]);
+        [task setEnvironment:[NSDictionary dictionaryWithObjectsAndKeys:@"/tmp/launch-ooAfUm/Listeners", @"SSH_AUTH_SOCK", nil]];
+        //	NSLog(@"%@",[task environment]);
+        
+        @try{
+            [task launch];
+        } @catch(NSException * e){
+            NSLog(@"Exc: %@",e);
+        }
+        
+    //	[readHandle readToEndOfFileInBackgroundAndNotify];
+        [readHandle readInBackgroundAndNotify];
+    }
+    return self;
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+}
 @end
