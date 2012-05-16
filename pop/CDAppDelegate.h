@@ -8,7 +8,13 @@
 
 #import <Cocoa/Cocoa.h>
 
+typedef enum {
+    CDPopModeNormal = 0,
+    CDPopModeInteractive = 1
+} CDPopMode;
+
 @interface CDAppDelegate : NSObject <NSApplicationDelegate> {
+    CDPopMode mode; 
     NSTask *task;
 	NSFileHandle *readHandle;
 	NSFileHandle *writeHandle;
@@ -46,7 +52,10 @@
 
 - (void)receiveData:(NSNotification *)aNotification;
 
--(void)taskDidTerminate:(NSNotification *)notif;
+- (void)taskDidTerminate:(NSNotification *)notif;
+
+- (BOOL)runInteractive;
+-(void)runInteractiveLoop:(NSTimer *)aTimer;
 
 
 - (void)handleSimpleArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index;
@@ -54,5 +63,9 @@
 - (void)handleSpecialArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index;
 
 - (BOOL)isKVCCompliantForKey:(NSString *)keyPath;
+
+- (NSString *)cleanupString:(NSString *)input;
+
+
 
 @end

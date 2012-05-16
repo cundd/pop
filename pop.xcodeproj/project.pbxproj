@@ -19,7 +19,6 @@
 		6557EF21155181A900830335 /* popTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF20155181A900830335 /* popTests.m */; };
 		6557EF2F15518A4300830335 /* run.php in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF2E15518A4300830335 /* run.php */; };
 		6557EF311551A6EE00830335 /* run.phpsh in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF301551A6EE00830335 /* run.phpsh */; };
-		657431301555895E00AA4B3B /* NSWindow+CDWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 6574312F1555895E00AA4B3B /* NSWindow+CDWindow.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,8 +53,6 @@
 		6557EF20155181A900830335 /* popTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = popTests.m; sourceTree = "<group>"; };
 		6557EF2E15518A4300830335 /* run.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; path = run.php; sourceTree = "<group>"; };
 		6557EF301551A6EE00830335 /* run.phpsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = run.phpsh; sourceTree = "<group>"; };
-		6574312E1555895E00AA4B3B /* NSWindow+CDWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSWindow+CDWindow.h"; sourceTree = "<group>"; };
-		6574312F1555895E00AA4B3B /* NSWindow+CDWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSWindow+CDWindow.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -125,8 +122,6 @@
 				6557EF09155181A800830335 /* CDAppDelegate.m */,
 				6557EF0B155181A900830335 /* MainMenu.xib */,
 				6557EEFD155181A800830335 /* Supporting Files */,
-				6574312E1555895E00AA4B3B /* NSWindow+CDWindow.h */,
-				6574312F1555895E00AA4B3B /* NSWindow+CDWindow.m */,
 			);
 			path = pop;
 			sourceTree = "<group>";
@@ -277,7 +272,6 @@
 			files = (
 				6557EF03155181A800830335 /* main.m in Sources */,
 				6557EF0A155181A800830335 /* CDAppDelegate.m in Sources */,
-				657431301555895E00AA4B3B /* NSWindow+CDWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,6 +381,7 @@
 		6557EF25155181A900830335 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_GC = required;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pop/pop-Prefix.pch";
 				INFOPLIST_FILE = "pop/pop-Info.plist";
@@ -398,6 +393,7 @@
 		6557EF26155181A900830335 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_GC = required;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pop/pop-Prefix.pch";
 				INFOPLIST_FILE = "pop/pop-Info.plist";
