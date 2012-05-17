@@ -10,11 +10,12 @@
 
 #define kCDInteractiveTimerInterval 0.1
 
+#define SHOW_DEBUG_INFO 0
+
 @implementation CDAppDelegate
 
 @synthesize window = _window;
 @synthesize objectPool;
-@synthesize interactiveLoopTimer;
 
 
 - (NSArray *)commandPartsToArguments:(NSArray *)pathParts{
@@ -27,7 +28,6 @@
     for(i = 2; i<length; i++){
         id newArgument;
         NSString * argumentIdentifier = [pathParts objectAtIndex:i];
-        NSLog(@"arg: '%@'", argumentIdentifier);
         
         if([argumentIdentifier hasPrefix:@"@"] || [argumentIdentifier hasPrefix:@"("]){ // Check if it is a special or simple type argument
             newArgument = argumentIdentifier;
@@ -48,7 +48,6 @@
 }
 
 - (void)handleSimpleArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index {
-    NSLog(@"Simple arg: %@",argument);
     if([argument hasPrefix:@"(float)"]){
         float value = [[argument substringFromIndex:7] floatValue];
         [invocation setArgument:&value atIndex:index];
@@ -60,7 +59,6 @@
         [invocation setArgument:&value atIndex:index];
     } else if([argument hasPrefix:@"(uint)"]){
         NSUInteger value = [[argument substringFromIndex:6] intValue];
-        NSLog(@"%lu",value);
         [invocation setArgument:&value atIndex:index];
     } else if([argument hasPrefix:@"(uinteger)"]){
         NSUInteger value = [[argument substringFromIndex:10] intValue];
@@ -117,7 +115,9 @@
     }
     [signature retain];
     
+#if SHOW_DEBUG_INFO
     NSLog(@"Args: %@", arguments);
+#endif
     
     // Next we create the invocation that will actually call the required selector.
     invocation = [NSInvocation invocationWithMethodSignature:signature];
@@ -134,8 +134,6 @@
         id argument = [arguments objectAtIndex:i];
         argumentIndex = i + 2;
         
-        NSLog(@"Arg: %@ for index %u", argument, (uint)argumentIndex);
-        
         // Check if the argument is a special
         if([argument isKindOfClass:[NSString class]]){
             if([argument hasPrefix:@"("]){
@@ -147,14 +145,9 @@
             [invocation setArgument:&argument atIndex:argumentIndex];
         }
     }
-    [invocation retainArguments];
-    
-    NSMethodSignature *sigi = [invocation methodSignature];
-    if(sigi != signature){
-        NSLog(@"Signature isn't the same");
-    }
+#if SHOW_DEBUG_INFO
     NSLog(@"Before invoke: Target %@ with signature %@ (SEL: %s)", [[invocation target] class], [invocation methodSignature], selector);
-//    [invocation performSelector:@selector(invoke)];
+#endif
     
     @try{
         [invocation invoke];
@@ -165,18 +158,16 @@
             NSLog(@"Target doesn't respond to %@", methodName);
         }
     }
-    
+#if SHOW_DEBUG_INFO
     NSLog(@"After invoke: Target %@ with signature %@ (SEL: %s)", [[invocation target] class], [invocation methodSignature], selector);
-    
-    if(![invocation.target isEqualTo:object]){
-        NSLog(@"The target is not the object");
-    }
-//  [invocation performSelectorOnMainThread:@selector(invoke) withObject:nil waitUntilDone:wait];
+#endif
     return success;
 }
 
 - (id)findObjectInPoolWithIdentifier:(NSString *)identifier{
+#if SHOW_DEBUG_INFO
     NSLog(@"Identifier: %@ Pool: %@", identifier, objectPool);
+#endif
     return [objectPool objectForKey:identifier];
 }
 
@@ -237,7 +228,7 @@
     NSArray *commandParts = [commandString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSString *command = [commandParts objectAtIndex:0];
     
-#if DEBUG
+#if SHOW_DEBUG_INFO
     NSLog(@"Parsing command string '%@'", commandString);
 #endif
     
@@ -266,7 +257,7 @@
             newIdentifier = newClassName;
         }
         
-#if DEBUG        
+#if SHOW_DEBUG_INFO        
         NSLog(@"New class: '%@'", newClassName);
 #endif
         if(init){
@@ -279,7 +270,7 @@
         } else {
             NSLog(@"Couldn't create object ob class %@", newClassName);
         }
-#if DEBUG
+#if SHOW_DEBUG_INFO
         NSLog(@"Object: %@", object);
 #endif
     } else if([command isEqualToString:@"printf"]){ // echo
@@ -334,7 +325,7 @@
 - (BOOL)executeWithCommandParts:(NSArray *)commandParts{
     id object;
 
-#if DEBUG
+#if SHOW_DEBUG_INFO
     NSLog(@"Command parts: %@", commandParts);
 #endif
     
@@ -351,22 +342,22 @@
         targetIsClass = TRUE;
         object = objectIdentifier;
     } else if(!(object = [self findObjectWithIdentifier:objectIdentifier])){
-#if DEBUG
+#if SHOW_DEBUG_INFO
         NSLog(@"No object");
 #endif
     }
     
     if([arguments count] == 0){
-#if DEBUG
+#if SHOW_DEBUG_INFO
         NSLog(@"Perform selector (without args) %@", objectMethod);
 #endif
         [object performSelector:NSSelectorFromString(objectMethod) withObject:nil afterDelay:0.0];
     } else if([self invokeMethodWithName:objectMethod onObject:object withArguments:arguments]){
-#if DEBUG
+#if SHOW_DEBUG_INFO
         NSLog(@"Did perform selector (with args) %@", objectMethod);
 #endif
     } else {
-#if DEBUG
+#if SHOW_DEBUG_INFO
         NSLog(@"Object doesn't respond to %@", objectMethod);
 #endif
     }
@@ -397,9 +388,7 @@
         NSRange commandDelimiterRange = [commandQueue rangeOfCharacterFromSet:commandDelimiter];
         if(commandDelimiterRange.location != NSNotFound){
             // Handle the commands in the queue
-//            [commandQueue release];
             commandQueue = [commandQueue stringByTrimmingCharactersInSet:illegalCharacters];
-//            [commandQueue retain];
             NSArray * commandLines = [commandQueue componentsSeparatedByCharactersInSet:commandDelimiter];
             for(NSString * commandLineString in commandLines){
                 if([commandLineString length]){
@@ -425,7 +414,7 @@
 -(void)taskDidTerminate:(NSNotification *)notif{
 	int status = [task terminationStatus];
     
-#if DEBUG
+#if SHOW_DEBUG_INFO
 	if(status == 0){
 		NSLog(@"Task succeeded.");
 	} else {
@@ -478,18 +467,6 @@
     
     printf("POP Interactive Console (Version 0.1.0)\n\
 Use \"help\", \"copyright\" or \"license\" for more information.\n");
-//    while(!feof(stdin)){
-//        
-//    }
-    
-//    NSTimer *runLoopTimer = 
-//    [self performSelector:@selector(runInteractiveLoop:) withObject:nil afterDelay:kCDInteractiveTimerInterval];
-//    [self performSelectorOnMainThread:@selector(runInteractiveLoop:) withObject:nil waitUntilDone:NO];
-    
-//    [NSThread detachNewThreadSelector:@selector(runInteractiveLoop:) toTarget:self withObject:nil];
-//    [timer performSelector:@selector(invalidate) onThread:timerThread withObject:nil waitUntilDone:NO];
-    
-//    interactiveLoopTimer = [NSTimer scheduledTimerWithTimeInterval:kCDInteractiveTimerInterval target:self selector:@selector(runInteractiveLoop:) userInfo:nil repeats:YES];
     return TRUE;
 }
 
@@ -528,8 +505,6 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
             }
         }
     }
-//    [self performSelector:@selector(runInteractiveLoop:) withObject:nil afterDelay:kCDInteractiveTimerInterval];
-//    [self performSelectorOnMainThread:@selector(runInteractiveLoop:) withObject:nil waitUntilDone:NO];
 }
 
 -(id)init{
@@ -569,7 +544,6 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadCompletionNotification object:nil];
-        //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadToEndOfFileCompletionNotification object:nil];
         
         // Register for task termination
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:nil];
@@ -589,10 +563,7 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         //	[task setStandardInput:inputPipe];
         [task setArguments:arguments];
         [task setCurrentDirectoryPath:@"~"];
-        
-        //	NSLog(@"%@",[task environment]);
         [task setEnvironment:[NSDictionary dictionaryWithObjectsAndKeys:@"/tmp/launch-ooAfUm/Listeners", @"SSH_AUTH_SOCK", nil]];
-        //	NSLog(@"%@",[task environment]);
         
         @try{
             [task launch];
@@ -600,7 +571,6 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
             NSLog(@"Exc: %@",e);
         }
         
-    //	[readHandle readToEndOfFileInBackgroundAndNotify];
         [readHandle readInBackgroundAndNotify];
     }
     return self;
