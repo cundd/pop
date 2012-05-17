@@ -16,7 +16,7 @@
                BlueprintIdentifier = "6557EEF1155181A800830335"
                BuildableName = "pop.app"
                BlueprintName = "pop"
-               ReferencedContainer = "container:pop.xcodeproj">
+               ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -34,7 +34,7 @@
                BlueprintIdentifier = "6557EF12155181A900830335"
                BuildableName = "popTests.octest"
                BlueprintName = "popTests"
-               ReferencedContainer = "container:pop.xcodeproj">
+               ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -44,7 +44,7 @@
             BlueprintIdentifier = "6557EEF1155181A800830335"
             BuildableName = "pop.app"
             BlueprintName = "pop"
-            ReferencedContainer = "container:pop.xcodeproj">
+            ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -63,7 +63,7 @@
             BlueprintIdentifier = "6557EEF1155181A800830335"
             BuildableName = "pop.app"
             BlueprintName = "pop"
-            ReferencedContainer = "container:pop.xcodeproj">
+            ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -81,7 +81,7 @@
             BlueprintIdentifier = "6557EEF1155181A800830335"
             BuildableName = "pop.app"
             BlueprintName = "pop"
-            ReferencedContainer = "container:pop.xcodeproj">
+            ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

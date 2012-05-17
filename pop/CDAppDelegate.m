@@ -12,11 +12,26 @@
 
 #define SHOW_DEBUG_INFO 0
 
+
+void say(NSString *format, ...){
+    va_list      listOfArguments;
+    NSString    *formattedString;
+
+    va_start(listOfArguments, format);
+    formattedString = [[NSString alloc] initWithFormat:format
+                                             arguments:listOfArguments];
+    va_end(listOfArguments);
+    
+    // Color the output in Cyan
+    printf("\033[36m%s\033[0m", [formattedString UTF8String]);
+//    printf("%s", [formattedString UTF8String]);
+}
+
+
 @implementation CDAppDelegate
 
 @synthesize window = _window;
 @synthesize objectPool;
-
 
 - (NSArray *)commandPartsToArguments:(NSArray *)pathParts{
     NSUInteger i;
@@ -316,7 +331,7 @@
         [self executeWithCommandParts:[NSArray arrayWithArray:shiftedCommandParts]];
     } else if([self executeWithCommandParts:commandParts]){ // method execution
     } else { // Couldn't parse command
-        NSLog(@"Couldn't parse command %@", commandString);
+        say(@"Couldn't parse command %@", commandString);
         return FALSE;
     }
     return TRUE;
@@ -400,7 +415,7 @@
             commandQueue = @"";
         } else {
             // Print the input to show what is typed
-            printf("%s", [justReceivedCommand UTF8String]);
+            say(justReceivedCommand);
             fflush(stdout);
         }
         
@@ -421,6 +436,9 @@
 		NSLog(@"Task failed.");
 	}
 #endif
+    if(status){
+        
+    }
 }
 
 -(NSString *)cleanupString:(NSString *)input{
@@ -465,7 +483,7 @@
     dispatch_resume(source);
     
     
-    printf("POP Interactive Console (Version 0.1.0)\n\
+    say(@"POP Interactive Console (Version 0.1.0)\n\
 Use \"help\", \"copyright\" or \"license\" for more information.\n");
     return TRUE;
 }
@@ -480,7 +498,7 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         newlineCharacterSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
     }
     
-    printf("> ");
+    say(@"> ");
     
     fgets(buffer, 8192, stdin);
     commandString = [self cleanupString:[NSString stringWithCString:buffer encoding:NSUTF8StringEncoding]];
@@ -488,13 +506,13 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     if(commandString.length == 0){
         // Do nothing
     } else if([commandString isEqualToString:@"help"]){
-        printf("POP Help:\n Creating:    'new NSWindow variableName [noInit]'   Creates a new object (Set 'noInit' if you only wont to alloc)\n Execution:   'exec variableName method' or 'exec variableName method arg0 ... argN'    Executes the method on the object\n printf:      'printf format variableName'           Prints a formatted string [ = printf(format, variableName) ]\n echo:        'echo variableName'                    Logs the value from variableName [ = NSLog ]\n get:         'get variableName'                     Currently the same as \"echo\"\n set:         'set variableName newValue'            Sets the newValue for the variableName\n");     
+        say(@"POP Help:\n Creating:    'new NSWindow variableName [noInit]'   Creates a new object (Set 'noInit' if you only wont to alloc)\n Execution:   'exec variableName method' or 'exec variableName method arg0 ... argN'    Executes the method on the object\n printf:      'printf format variableName'           Prints a formatted string [ = printf(format, variableName) ]\n echo:        'echo variableName'                    Logs the value from variableName [ = NSLog ]\n get:         'get variableName'                     Currently the same as \"echo\"\n set:         'set variableName newValue'            Sets the newValue for the variableName\n");     
     } else if([commandString isEqualToString:@"copyright"]){
-        printf("(c) 2012 Corn Daniel\n");
+        say(@"(c) 2012 Corn Daniel\n");
     } else if([commandString isEqualToString:@"license"]){
-        printf("Copyright (c) 2012 Corn Daniel\n\nPermission is hereby granted, free of charge, to any person obtaining a copy \nof this software and associated documentation files (the \"Software\"), to deal \nin the Software without restriction, including without limitation the rights to use, \ncopy, modify, merge, publish, distribute, sublicense, and/or sell copies of the \nSoftware, and to permit persons to whom the Software is furnished to do so, \nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all \ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY \nKIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE \nWARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR \nPURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS \nOR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR \nOTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR \nOTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE \nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n");
+        say(@"Copyright (c) 2012 Daniel Corn\n\nPermission is hereby granted, free of charge, to any person obtaining a \ncopy of this software and associated documentation files (the \"Software\"), \nto deal in the Software without restriction, including without limitation \nthe rights to use, copy, modify, merge, publish, distribute, sublicense, \nand/or sell copies of the Software, and to permit persons to whom the \nSoftware is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in \nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR \nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, \nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL \nTHE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER \nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING \nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER \nDEALINGS IN THE SOFTWARE.\n");
     } else if([commandString isEqualToString:@"exit"]){
-        printf("Goodbye\n");
+        say(@"Goodbye\n");
         [[NSApplication sharedApplication] terminate:self];
     } else {
         commandLines = [commandString componentsSeparatedByCharactersInSet:commandDelimiter];
