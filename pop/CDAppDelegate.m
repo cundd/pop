@@ -33,6 +33,8 @@ void say(NSString *format, ...){
 @synthesize window = _window;
 @synthesize objectPool;
 
+
+#pragma mark Argument handling
 - (NSArray *)commandPartsToArguments:(NSArray *)pathParts{
     NSUInteger i;
     NSUInteger length = [pathParts count];
@@ -107,6 +109,70 @@ void say(NSString *format, ...){
     }
 }
 
+
+#pragma mark Object management
+- (id)findObjectInPoolWithIdentifier:(NSString *)identifier{
+#if SHOW_DEBUG_INFO
+    NSLog(@"Identifier: %@ Pool: %@", identifier, objectPool);
+#endif
+    return [objectPool objectForKey:identifier];
+}
+
+- (void)setObject:(id)object inPoolWithIdentifier:(NSString *)identifier{
+    [objectPool setObject:object forKey:identifier];
+}
+
+- (void)updateObject:(id)object forIdentifier:(NSString *)identifier{
+    [identifier retain];
+    // Check if the identifier belongs to a property
+    if([self respondsToSelector:NSSelectorFromString(identifier)]){
+        [self setValue:object forKeyPath:identifier];
+    } else {
+        [self setObject:object inPoolWithIdentifier:identifier];
+    }
+    [identifier release];
+}
+
+- (BOOL)identifierSignalsClass:(NSString *)identifier{
+    // Check if the first character is upper case
+    if([identifier length] == 0){
+        return FALSE;
+    }
+    unichar firstChar = [identifier characterAtIndex: 0]; //get the first character from the string.
+    NSCharacterSet *upperCaseSet = [NSCharacterSet uppercaseLetterCharacterSet];
+    if ([upperCaseSet characterIsMember: firstChar]){
+        return TRUE;
+    }
+    return FALSE;
+}
+
+- (id)findObjectWithIdentifier:(NSString *)identifier{
+    id object;
+    
+    if([self identifierSignalsClass:identifier]){
+        object = identifier;
+    } else {
+        object = [self findObjectInPoolWithIdentifier:identifier];
+    }
+    if(!object){
+        if([self isKVCCompliantForKey:identifier]){
+            object = [self valueForKeyPath:identifier];
+        }
+    }
+    return object;
+}
+
+
+#pragma mark Helper
+- (BOOL)isKVCCompliantForKey:(NSString *)keyPath{
+    NSArray * keyPathArray = [keyPath componentsSeparatedByString:@"."];
+    NSString * firstKey = [keyPathArray objectAtIndex:0];
+    if([self respondsToSelector:NSSelectorFromString(firstKey)]){
+        return TRUE;
+    }
+    return FALSE;
+}
+
 - (BOOL)invokeMethodWithName:(NSString *)methodName onObject:(NSObject *)object withArguments:(NSArray *)arguments{
     BOOL success = TRUE;
     NSUInteger argumentCount, argumentIndex, i;
@@ -179,66 +245,8 @@ void say(NSString *format, ...){
     return success;
 }
 
-- (id)findObjectInPoolWithIdentifier:(NSString *)identifier{
-#if SHOW_DEBUG_INFO
-    NSLog(@"Identifier: %@ Pool: %@", identifier, objectPool);
-#endif
-    return [objectPool objectForKey:identifier];
-}
 
-- (void)setObject:(id)object inPoolWithIdentifier:(NSString *)identifier{
-    [objectPool setObject:object forKey:identifier];
-}
-
-- (void)updateObject:(id)object forIdentifier:(NSString *)identifier{
-    [identifier retain];
-    // Check if the identifier belongs to a property
-    if([self respondsToSelector:NSSelectorFromString(identifier)]){
-        [self setValue:object forKeyPath:identifier];
-    } else {
-        [self setObject:object inPoolWithIdentifier:identifier];
-    }
-    [identifier release];
-}
-
-- (BOOL)identifierSignalsClass:(NSString *)identifier{
-    // Check if the first character is upper case
-    if([identifier length] == 0){
-        return FALSE;
-    }
-    unichar firstChar = [identifier characterAtIndex: 0]; //get the first character from the string.
-    NSCharacterSet *upperCaseSet = [NSCharacterSet uppercaseLetterCharacterSet];
-    if ([upperCaseSet characterIsMember: firstChar]){
-        return TRUE;
-    }
-    return FALSE;
-}
-
-- (id)findObjectWithIdentifier:(NSString *)identifier{
-    id object;
-    
-    if([self identifierSignalsClass:identifier]){
-        object = identifier;
-    } else {
-        object = [self findObjectInPoolWithIdentifier:identifier];
-    }
-    if(!object){
-        if([self isKVCCompliantForKey:identifier]){
-            object = [self valueForKeyPath:identifier];
-        }
-    }
-    return object;
-}
-
-- (BOOL)isKVCCompliantForKey:(NSString *)keyPath{
-    NSArray * keyPathArray = [keyPath componentsSeparatedByString:@"."];
-    NSString * firstKey = [keyPathArray objectAtIndex:0];
-    if([self respondsToSelector:NSSelectorFromString(firstKey)]){
-        return TRUE;
-    }
-    return FALSE;
-}
-
+#pragma mark Parsing commands
 - (BOOL)parseCommandString:(NSString *)commandString{
     NSArray *commandParts = [commandString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSString *command = [commandParts objectAtIndex:0];
@@ -249,7 +257,7 @@ void say(NSString *format, ...){
     
     // Handle the commands
     if([command isEqualToString:@"#"] || [commandString hasPrefix:@">"]){ // comments
-    } else if([command isEqualToString:@"new"]){ // object creation
+    } else if([command isEqualToString:@"new"] || [command isEqualToString:@"alloc"]){ // object creation
         id object;
         BOOL init = TRUE;
         NSString *newIdentifier;
@@ -264,8 +272,13 @@ void say(NSString *format, ...){
                 init = FALSE;
             }
         }
-        newClassName = [newClassName stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
         
+        // If the command is alloc, dont call init
+        if([command isEqualToString:@"alloc"]){
+            init = FALSE;
+        }
+        
+        newClassName = [newClassName stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
         if([commandParts count] > 2){
             newIdentifier = [commandParts objectAtIndex:2];
         } else {
@@ -379,6 +392,8 @@ void say(NSString *format, ...){
     return TRUE;
 }
 
+
+#pragma mark Task management
 - (void)receiveData:(NSNotification *)aNotification{
     static NSCharacterSet * illegalCharacters;
     static NSCharacterSet * controlCharacters;
@@ -407,7 +422,7 @@ void say(NSString *format, ...){
             NSArray * commandLines = [commandQueue componentsSeparatedByCharactersInSet:commandDelimiter];
             for(NSString * commandLineString in commandLines){
                 if([commandLineString length]){
-                    commandLineString = [[commandLineString stringByTrimmingCharactersInSet:controlCharacters] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+                    commandLineString = [self prepareCommandString:commandLineString];
                     [self parseCommandString:commandLineString];
                 }
             }
@@ -426,7 +441,7 @@ void say(NSString *format, ...){
 	}
 }
 
--(void)taskDidTerminate:(NSNotification *)notif{
+- (void)taskDidTerminate:(NSNotification *)notif{
 	int status = [task terminationStatus];
     
 #if SHOW_DEBUG_INFO
@@ -439,6 +454,16 @@ void say(NSString *format, ...){
     if(status){
         
     }
+}
+
+
+#pragma mark Preparing raw commands
+- (NSString *)prepareRawCommandInput:(NSString *)commandInput{
+    return [self cleanupString:commandInput];
+}
+
+- (NSString *)prepareCommandString:(NSString *)commandString {
+    return [[commandString stringByTrimmingCharactersInSet:[NSCharacterSet controlCharacterSet]] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
 -(NSString *)cleanupString:(NSString *)input{
@@ -459,6 +484,9 @@ void say(NSString *format, ...){
                                                           withTemplate:@""];
     return modifiedString;
 }
+
+
+#pragma mark Interactive
 -(BOOL)runInteractive{
     NSTimeInterval timeInterval = (NSTimeInterval) 0.1;
     uint64_t timeInterval_gcd;
@@ -525,6 +553,8 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     }
 }
 
+
+#pragma mark Initialization
 -(id)init{
     self = [super init];
     if(self){

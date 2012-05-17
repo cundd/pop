@@ -33,37 +33,29 @@ typedef enum {
 @property (retain) NSMutableDictionary *objectPool;
 
 - (NSArray *)commandPartsToArguments:(NSArray *)pathParts;
-
+- (void)handleSimpleArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index;
+- (void)handleSpecialArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index;
 - (NSString *)transformString:(NSString *)inputString;
 
-- (BOOL)invokeMethodWithName:(NSString *)methodName onObject:(id)object withArguments:(NSArray *)arguments;
-
 - (id)findObjectInPoolWithIdentifier:(NSString *)identifier;
-
 - (void)setObject:(id)object inPoolWithIdentifier:(NSString *)identifier;
-
 - (id)findObjectWithIdentifier:(NSString *)identifier;
-
 - (void)updateObject:(id)object forIdentifier:(NSString *)identifier;
 
 - (BOOL)executeWithCommandParts:(NSArray *)commandParts;
-
 - (BOOL)parseCommandString:(NSString *)commandString;
 
 - (void)receiveData:(NSNotification *)aNotification;
-
 - (void)taskDidTerminate:(NSNotification *)notif;
 
 - (BOOL)runInteractive;
 - (void)runInteractiveLoop:(NSTimer *)aTimer;
 
-
-- (void)handleSimpleArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index;
-
-- (void)handleSpecialArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index;
-
 - (BOOL)isKVCCompliantForKey:(NSString *)keyPath;
+- (BOOL)invokeMethodWithName:(NSString *)methodName onObject:(id)object withArguments:(NSArray *)arguments;
 
+- (NSString *)prepareRawCommandInput:(NSString *)commandInput;
+- (NSString *)prepareCommandString:(NSString *)commandString;
 - (NSString *)cleanupString:(NSString *)input;
 
 
