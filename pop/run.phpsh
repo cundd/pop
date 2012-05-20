@@ -17,16 +17,10 @@
 
 
 
-new NSObject
-exec window close
-new NSWindow b noInit
-exec b initWithContentRect:styleMask:backing:defer: @NSMakeRect(0,0,200,200) (uint)13 (uint)2 (int)1
 
+# exec window close;
 
+// new NSWindow myWin 1;
+// myWin initWithContentRect:styleMask:backing:defer: @NSMakeRect(0,0,200,200) (uint)13 (uint)2 (int)1;
+// myWin makeKeyAndOrderFront: nil
 
-exec b makeKeyAndOrderFront: nil
-get b
-printf %@ b
-
-
-new NSWindow myWin 1; myWin initWithContentRect:styleMask:backing:defer: @NSMakeRect(0,0,200,200) (uint)13 (uint)2 (int)1 ; myWin makeKeyAndOrderFront: nil

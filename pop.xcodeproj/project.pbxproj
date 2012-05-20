@@ -20,6 +20,8 @@
 		6557EF2F15518A4300830335 /* run.php in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF2E15518A4300830335 /* run.php */; };
 		6557EF311551A6EE00830335 /* run.phpsh in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF301551A6EE00830335 /* run.phpsh */; };
 		65E359611564302E007BD73C /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 65E359601564302E007BD73C /* LICENSE */; };
+		65E3599015679E8C007BD73C /* PopServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 65E3598F15679E8C007BD73C /* PopServer.m */; };
+		65E3599115679E8C007BD73C /* PopServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 65E3598F15679E8C007BD73C /* PopServer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +57,8 @@
 		6557EF2E15518A4300830335 /* run.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; path = run.php; sourceTree = "<group>"; };
 		6557EF301551A6EE00830335 /* run.phpsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = run.phpsh; sourceTree = "<group>"; };
 		65E359601564302E007BD73C /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		65E3598E15679E8C007BD73C /* PopServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopServer.h; sourceTree = "<group>"; };
+		65E3598F15679E8C007BD73C /* PopServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopServer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +126,8 @@
 			children = (
 				6557EF08155181A800830335 /* CDAppDelegate.h */,
 				6557EF09155181A800830335 /* CDAppDelegate.m */,
+				65E3598E15679E8C007BD73C /* PopServer.h */,
+				65E3598F15679E8C007BD73C /* PopServer.m */,
 				6557EF0B155181A900830335 /* MainMenu.xib */,
 				6557EEFD155181A800830335 /* Supporting Files */,
 			);
@@ -276,6 +282,7 @@
 			files = (
 				6557EF03155181A800830335 /* main.m in Sources */,
 				6557EF0A155181A800830335 /* CDAppDelegate.m in Sources */,
+				65E3599015679E8C007BD73C /* PopServer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,6 +291,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6557EF21155181A900830335 /* popTests.m in Sources */,
+				65E3599115679E8C007BD73C /* PopServer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
