@@ -147,7 +147,6 @@ static PopServer *sharedPopServerInstance = nil;
 
 #pragma mark Object management
 - (NSString *)identifierForObject:(id)object{
-    NSData *archivedObject;
     NSString *identifier;
     
     // Look inside the pool
@@ -156,27 +155,15 @@ static PopServer *sharedPopServerInstance = nil;
         identifier = opoUnknownSenderArgument;
     }
     return identifier;
-    
-    
-    if(!identifier){
-        archivedObject = [NSKeyedArchiver archivedDataWithRootObject:object];
-        NSString *archString = [NSString stringWithFormat:@"%s", [archivedObject bytes]];
-        NSLog(@"%@", object);
-
-//        NSString *archString = [[NSString stringWithFormat:@"%s", [archivedObject data]] initWithData:archivedObject
-//                                                                                             encoding:NSNEXTSTEPStringEncoding];
-        NSLog(@"archi: %@ \n %@",archivedObject, archString            );
-    }
-    return identifier;
 }
 - (NSString *)identifierForObjectInPool:(id)object{
-    for(NSString *key in [objectPool allKeys]){
-        NSObject *aObject = [objectPool objectForKey:key];
-        if([aObject isEqualTo:object]){
-            return key;
-        }
+    NSArray *allKeysForObject;
+    
+    allKeysForObject = [objectPool allKeysForObject:object];
+    if(allKeysForObject.count < 1){
+        return nil;
     }
-    return nil;
+    return [allKeysForObject objectAtIndex:0];
 }
 - (NSString *)identifierForObjectInProperties:(id)object{
     return nil;
@@ -258,38 +245,6 @@ static PopServer *sharedPopServerInstance = nil;
     if(targetIsClass){
         Class targetClass = NSClassFromString((NSString *)object);
         signature = [targetClass instanceMethodSignatureForSelector:selector];
-//        IMP implementation;
-//        if(!signature && (implementation = [targetClass instanceMethodForSelector:selector])){
-//            NSUInteger argumentCount = [arguments count];
-//            id result = nil;
-//            
-//            switch (argumentCount) {
-//                case 0:
-//                    result = implementation(targetClass, selector);
-//                    break;
-//                    
-//                case 1:
-//                    result = implementation(targetClass, selector, [arguments objectAtIndex:0]);
-//                    break;
-//                    
-//                case 2:
-//                    result = implementation(targetClass, selector, [arguments objectAtIndex:0], [arguments objectAtIndex:1]);
-//                    break;
-//                    
-//                case 3:
-//                    result = implementation(targetClass, selector, [arguments objectAtIndex:0], [arguments objectAtIndex:1], [arguments objectAtIndex:2]);
-//                    break;
-//                    
-//                default:
-//                    break;
-//            }
-//            if(result){
-//                return TRUE;
-//            } else {
-//                return FALSE;
-//            }
-//            
-//        }
         NSLog(@"Target is class %@ %@ %@ %s", object, targetClass, signature, (char *)selector);
     } else {
         signature = [object methodSignatureForSelector:selector];
@@ -796,40 +751,15 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         
         
         // Create a named pipe
-        BOOL useFifo = NO;
         FILE *outputFile;
-        int namedPipeFileDescriptor = 0;
         
-        if(useFifo){
-            
-    //        namedPipeFileDescriptor = mkfifo(kCDNamedPipe, 0664 | O_CREAT);
-            
-
-    //        namedPipeFileDescriptor = mkfifo(mktemp("/tmp/pop_temp.XXXXX"), O_WRONLY | O_CREAT);
-    //        namedPipeFileDescriptor = open(kCDNamedPipe, O_WRONLY | O_NONBLOCK);
-            
-    //        if(fopen(kCDNamedPipe, "w")){
-    //        if(open(kCDNamedPipe, O_WRONLY | O_NONBLOCK) == -1){
-            if(namedPipeFileDescriptor == -1){
-                // some error handling
-                NSLog(@"Couldn't create the named pipe '%s'", kCDNamedPipe);
-                [[NSApplication sharedApplication] terminate:nil];
-            } else {
-                // Open and use the fifo as you would any file in Cocoa, but remember that it's a FIFO
-    //            opoWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor:namedPipeFileDescriptor closeOnDealloc:YES];
-    //            opoWriteHandle = [NSFileHandle fileHandleForWritingAtPath:[NSString stringWithFormat:@"%s", kCDNamedPipe]];
-                
-                
-            }
-        } else {
-            outputFile = fopen(kCDNamedPipe, "w+");
-            if(outputFile == NULL){
-                NSLog(@"Couldn't open the file '%s'", kCDNamedPipe);
-                [[NSApplication sharedApplication] terminate:nil];
-            }
-            opoWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor: fileno(outputFile) closeOnDealloc: YES];
+        outputFile = fopen(kCDNamedPipe, "w+");
+        if(outputFile == NULL){
+            NSLog(@"Couldn't open the file '%s'", kCDNamedPipe);
+            [[NSApplication sharedApplication] terminate:nil];
         }
-        
+        opoWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor: fileno(outputFile) closeOnDealloc: YES];
+    
         
         // Creating the pipe for reading from PHP
         NSPipe *outputPipe = [NSPipe pipe];
