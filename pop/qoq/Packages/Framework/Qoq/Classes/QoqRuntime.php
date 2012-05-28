@@ -27,13 +27,24 @@ class QoqRuntime {
 	protected $application = NULL;
 	
 	/**
+	 * The shared runtime instance.
+	 * 
+	 * @var QoqRuntime
+	 */
+	static protected $sharedInstance = NULL;
+	
+	/**
 	 * Initializes the runtime system.
 	 * 
 	 * @return QoqRuntime
 	 */
 	public function __construct(){
-		
+		if(self::$sharedInstance === NULL){
+			spl_autoload_register(array(__CLASS__, 'loadClassFile'));
+			self::$sharedInstance = $this;
+		}
 	}
+	
 	
 	
 	/* MWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
@@ -46,7 +57,6 @@ class QoqRuntime {
 	 */
 	public function run(){
 		$this->pipe = fopen($this->getPipeName(), 'r');
-		
 		while(1){
 			$line = trim(fread($this->pipe, 1024));
 			if($line){
@@ -68,10 +78,8 @@ class QoqRuntime {
 	 * @return void
 	 */
 	public function dispatch($inputCommand){
-		
-        $retrievedValue = $this->getValueForKeyPath('textfield.stringValue');
-        $command = 'exec window setTitle: ' . $this->getCommandStringForValue($retrievedValue);
-        $this->sendCommand($command);
+		$app = $this->getApplication();
+		$app->handle($inputCommand);
 	}
 	
 	/**
@@ -83,8 +91,7 @@ class QoqRuntime {
 		if(!$this->application){
 			$settings = require_once(__DIR__ . '/../../../../Configuration/Settings.php');
 			$applicationControllerClass = $settings['PrincipalClass'];
-			// 'SampleApplication/Controller/StandardController',
-			
+			$this->application = self::makeInstance($applicationControllerClass);
 		}
 		return $this->application;
 	}
@@ -100,7 +107,7 @@ class QoqRuntime {
 	 * @param string $class The class name including the namespace
 	 * @return boolean  Returns TRUE if the class file could be loaded, otherwise FALSE
 	 */
-	public function loadClassFile($class){
+	static public function loadClassFile($class){
 		$controllerClassPath = str_replace('\\', '/', $class);
 		$firstSlashPosition = strpos($controllerClassPath, '/');
 		if($firstSlashPosition === FALSE){
@@ -108,9 +115,14 @@ class QoqRuntime {
 		}
 		$package = substr($controllerClassPath, 0, $firstSlashPosition);
 		$relativeClassPathFromPackage = substr($controllerClassPath, $firstSlashPosition);
-		$absoluteClassPath = __DIR__ . '/../../../' . $package . '/Classes/' . $relativeClassPathFromPackage;
-		require_once($absoluteClassPath);
+		$absoluteClassPathApplicationDirectory = __DIR__ . '/../../../Application/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
+		$absoluteClassPathFrameworkDirectory = __DIR__ . '/../../../Framework/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
 		
+		if(file_exists($absoluteClassPathFrameworkDirectory)){
+			require_once($absoluteClassPathFrameworkDirectory);
+		} else {
+			require_once($absoluteClassPathApplicationDirectory);
+		}
 		return class_exists($class, FALSE);
 	}
 	
@@ -120,8 +132,8 @@ class QoqRuntime {
 	 * @param string $class The class name including the namespace
 	 * @return object  The instance of the class, or NULL on error
 	 */
-	public function makeInstance($class){
-		if($this->loadClassFile($class)){
+	static public function makeInstance($class){
+		if(self::loadClassFile($class)){
 			return new $class;
 		}
 		return NULL;
@@ -138,16 +150,16 @@ class QoqRuntime {
 	 * @param string $identifier The identifier of the value to get
 	 * @return object  The value for the identifier
 	 */
-	public function getValueForKeyPath($identifier){
+	static public function getValueForKeyPath($identifier){
 		$command = "get $identifier";
-		$this->sendCommand($command);
-		return $this->waitForResponse();
+		self::sendCommand($command);
+		return self::sharedInstance()->waitForResponse();
 	}
 	/**
 	 * @see getValueForKeyPath()
 	 */
-	public function getValueForKey($identifier){
-		return $this->getValueForKeyPath($identifier);
+	static public function getValueForKey($identifier){
+		return self::getValueForKeyPath($identifier);
 	}
 	
 	/**
@@ -157,16 +169,41 @@ class QoqRuntime {
 	 * @param object $value The new value to set
 	 * @return void
 	 */
-	public function setValueForKeyPath($identifier, $value){
-		$value = $this->getCommandStringForValue($value);
+	static public function setValueForKeyPath($identifier, $value){
+		$value = self::getCommandStringForValue($value);
 		$command = "set $identifier $value";
-		$this->sendCommand($command);
+		self::sendCommand($command);
 	}
 	/**
 	 * @see setValueForKeyPath()
 	 */
-	public function setValueForKey($identifier, $value){
-		$this->setValueForKeyPath($identifier, $value);
+	static public function setValueForKey($identifier, $value){
+		self::setValueForKeyPath($identifier, $value);
+	}
+	
+	/**
+	 * Sends the given command to the POP server.
+	 * 
+	 * @param string $command The command to send
+	 * @return void
+	 */
+	static public function sendCommand($command){
+		echo $command . PHP_EOL;
+	}
+	
+	/**
+	 * Waits and returns the first response line from the POP server.
+	 * 
+	 * @return object  Returns the string representation
+	 */
+	public function waitForResponse(){
+		while(1){
+			$line = trim(fread($this->pipe, 1024));
+			if($line){
+				return $line;
+			}
+			usleep(100000);
+		}
 	}
 	
 	/**
@@ -192,36 +229,24 @@ class QoqRuntime {
 		$this->pipeName = $newName;
 	}
 	
-    /**
-	 * Sends the given command to the POP server.
-	 * 
-	 * @param string $command The command to send
-	 * @return void
-	 */
-	public function sendCommand($command){
-		echo $command . PHP_EOL;
-	}
-	
-	/**
-	 * Waits and returns the first response line from the POP server.
-	 * 
-	 * @return object  Returns the string representation
-	 */
-	public function waitForResponse(){
-		while(1){
-			$line = trim(fread($this->pipe, 1024));
-			if($line){
-				return $line;
-			}
-			usleep(100000);
-		}
-	}
 	
 	
 	
 	/* MWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
 	/* HELPERS           MWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
 	/* MWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
+	/**
+	 * Returns the shared instance.
+	 * 
+	 * @return QoqRuntime
+	 */
+	static public function sharedInstance(){
+		if(self::$sharedInstance === NULL){
+			new QoqRuntime();
+		}
+		return self::$sharedInstance;
+	}
+	
 	/**
 	 * Returs the command string for the given value.
 	 * 
