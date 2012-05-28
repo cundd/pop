@@ -25,6 +25,20 @@
 #import <Cocoa/Cocoa.h>
 #import <sys/stat.h>
 
+
+#ifndef kCDInteractiveTimerInterval
+#define kCDInteractiveTimerInterval 0.1
+#endif
+
+#ifndef kCDNamedPipe
+#define kCDNamedPipe "/tmp/qoq_pipe"
+#endif
+
+#ifndef SHOW_DEBUG_INFO
+#define SHOW_DEBUG_INFO 1
+#endif
+
+
 typedef enum {
     CDPopModeNormal = 0,
     CDPopModeInteractive = 1
@@ -34,7 +48,7 @@ extern NSString * const PopNotificationNamePrefix;
 extern NSString * const PopNotificationNameUnfoundCommandPrefix;
 
 @interface PopServer : NSObject <NSApplicationDelegate> {
-    NSString *opoUnknownSenderArgument;
+    NSString *qoqUnknownSenderArgument;
     CDPopMode mode;
     NSTask *task;
     
@@ -43,11 +57,12 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
 	NSFileHandle *writeHandle;
     
     // The File Handle for writing to PHP
-    NSFileHandle *opoWriteHandle;
+    NSFileHandle *qoqWriteHandle;
     
     // Configuring the task
     NSString *taskLaunchPath;
 	NSString *taskScriptPath;
+    NSString *qoqPipeName;
     NSMutableArray *taskArguments;
     
     // Pool for plugins
@@ -64,8 +79,9 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
 @property (retain) NSMutableDictionary *objectPool;
 
 @property (readonly) NSString *taskScriptPath;
-@property (readonly) NSArray *taskArguments;
 @property (readonly) NSString *taskLaunchPath;
+@property (readonly) NSString *qoqPipeName;
+@property (readonly) NSMutableArray *taskArguments;
 
 - (NSArray *)commandPartsToArguments:(NSArray *)pathParts;
 - (void)handleSimpleArgument:(NSString *)argument forInvokation:(NSInvocation * )invocation atIndex:(NSUInteger)index;
@@ -87,6 +103,7 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
 - (void)sendCommand:(NSString *)theCommand sender:(id)theSender;
 - (void)sendCommand:(NSString *)theCommand;
 - (void)forwardInvocation:(NSInvocation *)invocation;
+- (void)sendObject:(id)theObject;
 
 - (void)receiveData:(NSNotification *)aNotification;
 - (void)taskDidTerminate:(NSNotification *)notif;

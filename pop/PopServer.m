@@ -26,16 +26,6 @@
 
 #import "PopServer.h"
 
-#define kCDInteractiveTimerInterval 0.1
-
-#ifndef kCDNamedPipe
-    #define kCDNamedPipe "/tmp/pop_pipe"
-#endif
-
-#ifndef SHOW_DEBUG_INFO
-    #define SHOW_DEBUG_INFO 1
-#endif
-
 
 #pragma mark Constants
 NSString * const PopNotificationNamePrefix = @"PopNotification";
@@ -152,7 +142,7 @@ static PopServer *sharedPopServerInstance = nil;
     // Look inside the pool
     identifier = [self identifierForObjectInPool:object];
     if(!identifier){
-        identifier = opoUnknownSenderArgument;
+        identifier = qoqUnknownSenderArgument;
     }
     return identifier;
 }
@@ -372,9 +362,7 @@ static PopServer *sharedPopServerInstance = nil;
     } else if([command isEqualToString:@"get"]){ // get
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:1]];
         NSString *returnCommand = [NSString stringWithFormat:@"%@", object];
-        NSLog(@"%@", object);
-        [self sendCommand:returnCommand];
-        
+        [self sendObject:returnCommand];
     } else if([command isEqualToString:@"set"]){ // set
         NSString *objectIdentifier = [[commandParts objectAtIndex:1] retain];
         NSObject *newValue = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
@@ -440,7 +428,7 @@ static PopServer *sharedPopServerInstance = nil;
 #endif
     }
     
-    if([arguments count] == 0){
+    if(!targetIsClass && [arguments count] == 0){
 #if SHOW_DEBUG_INFO
         NSLog(@"Perform selector (without args) %@", objectMethod);
 #endif
@@ -507,11 +495,11 @@ static PopServer *sharedPopServerInstance = nil;
 #if SHOW_DEBUG_INFO
     NSLog(@"Sending command: '%@'", commandString);
 #endif
-    [opoWriteHandle writeData:[commandString dataUsingEncoding:NSUTF8StringEncoding]];
+    [qoqWriteHandle writeData:[commandString dataUsingEncoding:NSUTF8StringEncoding]];
 }
 
 - (void)sendCommand:(NSString *)theCommand {
-    [self sendCommand:theCommand sender:opoUnknownSenderArgument];
+    [self sendCommand:theCommand sender:qoqUnknownSenderArgument];
 }
 
 - (void)forwardInvocation:(NSInvocation *)invocation{
@@ -523,6 +511,16 @@ static PopServer *sharedPopServerInstance = nil;
     } else {
         [self doesNotRecognizeSelector:aSelector];
     }
+}
+
+- (void)sendObject:(id)theObject{
+    NSString * objectString;
+    objectString = [NSString stringWithFormat:@"%@", theObject];
+    
+#if SHOW_DEBUG_INFO
+    NSLog(@"Sending object to QOQ: '%@'", objectString);
+#endif
+    [qoqWriteHandle writeData:[objectString dataUsingEncoding:NSUTF8StringEncoding]];
 }
 
 
@@ -597,7 +595,7 @@ static PopServer *sharedPopServerInstance = nil;
     static NSRegularExpression *regex;
     if(!regex){
         NSError * error = NULL;
-        regex = [NSRegularExpression regularExpressionWithPattern:@"[^0-9a-z|;|,|-|!|$|%|=|*|+|\\.|:| |_|@|&|\"|'|´|`|>|#|/|\\(|\\)|\n|\\|]"
+        regex = [NSRegularExpression regularExpressionWithPattern:@"[^0-9a-z|;|,|-|!|$|%|=|*|+|\\.|:| |_|@|&|\"|'|´|`|<|>|#|/|\\(|\\)|\n|\\|]"
                                                           options:NSRegularExpressionCaseInsensitive
                                                             error:&error];
         if(error){
@@ -684,15 +682,9 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
 #pragma mark Initialization
 - (NSString *)taskScriptPath{
     if(!taskScriptPath){
-        taskScriptPath = [[NSBundle mainBundle] pathForResource:@"run" ofType:@"php"];
+        taskScriptPath = [[NSBundle mainBundle] pathForResource:@"run" ofType:@"php" inDirectory:@"qoq"];
     }
     return taskScriptPath;
-}
-- (NSArray *)taskArguments{
-    if(!taskArguments){
-        taskArguments = [NSArray arrayWithObjects:@"php", self.taskScriptPath, nil];
-    }
-    return taskArguments;
 }
 
 - (NSString *)taskLaunchPath{
@@ -700,6 +692,20 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         taskLaunchPath = @"/usr/bin/env";
     }
     return taskLaunchPath;
+}
+
+- (NSString *)qoqPipeName{
+    if(!qoqPipeName){
+        qoqPipeName = [NSString stringWithFormat:@"%s", kCDNamedPipe];
+    }
+    return qoqPipeName;
+}
+
+- (NSMutableArray *)taskArguments{
+    if(!taskArguments){
+        taskArguments = [NSMutableArray arrayWithObjects:@"php", self.taskScriptPath, nil];
+    }
+    return taskArguments;
 }
 
 -(id)init{
@@ -721,7 +727,7 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         // Set the shared instance
         sharedPopServerInstance = self;
         
-        opoUnknownSenderArgument = @"(unknownSender)";
+        qoqUnknownSenderArgument = @"(unknownSender)";
         
         commandDelimiter = [[NSCharacterSet characterSetWithCharactersInString:@";\n\r"] retain];
         commandQueue = @"";
@@ -742,7 +748,7 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:nil];
         
 #if SHOW_DEBUG_INFO
-        NSLog(@"Call script %@ with arguments: %@", taskLaunchPath, taskArguments);
+        NSLog(@"Call script %@ with arguments: %@", self.taskLaunchPath, self.taskArguments);
 #endif
         if(task){
             task = nil;
@@ -753,12 +759,12 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         // Create a named pipe
         FILE *outputFile;
         
-        outputFile = fopen(kCDNamedPipe, "w+");
+        outputFile = fopen([self.qoqPipeName UTF8String], "w+");
         if(outputFile == NULL){
-            NSLog(@"Couldn't open the file '%s'", kCDNamedPipe);
+            NSLog(@"Couldn't open the file '%@'", self.qoqPipeName);
             [[NSApplication sharedApplication] terminate:nil];
         }
-        opoWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor: fileno(outputFile) closeOnDealloc: YES];
+        qoqWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor: fileno(outputFile) closeOnDealloc: YES];
     
         
         // Creating the pipe for reading from PHP

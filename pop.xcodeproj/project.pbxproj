@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6504E47B1571791000243F49 /* qoq in Resources */ = {isa = PBXBuildFile; fileRef = 6504E47A1571791000243F49 /* qoq */; };
 		6557EEF7155181A800830335 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6557EEF6155181A800830335 /* Cocoa.framework */; };
 		6557EF01155181A800830335 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6557EEFF155181A800830335 /* InfoPlist.strings */; };
 		6557EF03155181A800830335 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF02155181A800830335 /* main.m */; };
@@ -35,6 +36,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6504E47A1571791000243F49 /* qoq */ = {isa = PBXFileReference; lastKnownFileType = folder; path = qoq; sourceTree = "<group>"; };
 		6557EEF2155181A800830335 /* pop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6557EEF6155181A800830335 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		6557EEF9155181A800830335 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -126,9 +128,9 @@
 			children = (
 				6557EF08155181A800830335 /* CDAppDelegate.h */,
 				6557EF09155181A800830335 /* CDAppDelegate.m */,
+				6557EF0B155181A900830335 /* MainMenu.xib */,
 				65E3598E15679E8C007BD73C /* PopServer.h */,
 				65E3598F15679E8C007BD73C /* PopServer.m */,
-				6557EF0B155181A900830335 /* MainMenu.xib */,
 				6557EEFD155181A800830335 /* Supporting Files */,
 			);
 			path = pop;
@@ -137,14 +139,15 @@
 		6557EEFD155181A800830335 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				6557EEFE155181A800830335 /* pop-Info.plist */,
+				6557EF05155181A800830335 /* Credits.rtf */,
 				6557EEFF155181A800830335 /* InfoPlist.strings */,
+				65E359601564302E007BD73C /* LICENSE */,
 				6557EF02155181A800830335 /* main.m */,
+				6557EEFE155181A800830335 /* pop-Info.plist */,
 				6557EF04155181A800830335 /* pop-Prefix.pch */,
+				6504E47A1571791000243F49 /* qoq */,
 				6557EF2E15518A4300830335 /* run.php */,
 				6557EF301551A6EE00830335 /* run.phpsh */,
-				6557EF05155181A800830335 /* Credits.rtf */,
-				65E359601564302E007BD73C /* LICENSE */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -246,6 +249,7 @@
 				6557EF2F15518A4300830335 /* run.php in Resources */,
 				6557EF311551A6EE00830335 /* run.phpsh in Resources */,
 				65E359611564302E007BD73C /* LICENSE in Resources */,
+				6504E47B1571791000243F49 /* qoq in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

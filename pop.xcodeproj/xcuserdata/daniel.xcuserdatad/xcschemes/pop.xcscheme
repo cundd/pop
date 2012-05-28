@@ -66,6 +66,12 @@
             ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "NSZombieEnabled"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
