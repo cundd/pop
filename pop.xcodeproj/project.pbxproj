@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6504E47B1571791000243F49 /* qoq in Resources */ = {isa = PBXBuildFile; fileRef = 6504E47A1571791000243F49 /* qoq */; };
+		6504E4811575515D00243F49 /* Window.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6504E4801575515D00243F49 /* Window.xib */; };
 		6557EEF7155181A800830335 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6557EEF6155181A800830335 /* Cocoa.framework */; };
 		6557EF01155181A800830335 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6557EEFF155181A800830335 /* InfoPlist.strings */; };
 		6557EF03155181A800830335 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF02155181A800830335 /* main.m */; };
@@ -20,6 +21,7 @@
 		6557EF21155181A900830335 /* popTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF20155181A900830335 /* popTests.m */; };
 		6557EF2F15518A4300830335 /* run.php in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF2E15518A4300830335 /* run.php */; };
 		6557EF311551A6EE00830335 /* run.phpsh in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF301551A6EE00830335 /* run.phpsh */; };
+		658A04F5157A1E6C0079D84F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 658A04F4157A1E6C0079D84F /* README.md */; };
 		65E359611564302E007BD73C /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 65E359601564302E007BD73C /* LICENSE */; };
 		65E3599015679E8C007BD73C /* PopServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 65E3598F15679E8C007BD73C /* PopServer.m */; };
 		65E3599115679E8C007BD73C /* PopServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 65E3598F15679E8C007BD73C /* PopServer.m */; };
@@ -37,6 +39,7 @@
 
 /* Begin PBXFileReference section */
 		6504E47A1571791000243F49 /* qoq */ = {isa = PBXFileReference; lastKnownFileType = folder; path = qoq; sourceTree = "<group>"; };
+		6504E4801575515D00243F49 /* Window.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Window.xib; sourceTree = "<group>"; };
 		6557EEF2155181A800830335 /* pop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6557EEF6155181A800830335 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		6557EEF9155181A800830335 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -58,6 +61,7 @@
 		6557EF20155181A900830335 /* popTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = popTests.m; sourceTree = "<group>"; };
 		6557EF2E15518A4300830335 /* run.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; path = run.php; sourceTree = "<group>"; };
 		6557EF301551A6EE00830335 /* run.phpsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = run.phpsh; sourceTree = "<group>"; };
+		658A04F4157A1E6C0079D84F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		65E359601564302E007BD73C /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		65E3598E15679E8C007BD73C /* PopServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopServer.h; sourceTree = "<group>"; };
 		65E3598F15679E8C007BD73C /* PopServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopServer.m; sourceTree = "<group>"; };
@@ -132,6 +136,7 @@
 				65E3598E15679E8C007BD73C /* PopServer.h */,
 				65E3598F15679E8C007BD73C /* PopServer.m */,
 				6557EEFD155181A800830335 /* Supporting Files */,
+				6504E4801575515D00243F49 /* Window.xib */,
 			);
 			path = pop;
 			sourceTree = "<group>";
@@ -148,6 +153,7 @@
 				6504E47A1571791000243F49 /* qoq */,
 				6557EF2E15518A4300830335 /* run.php */,
 				6557EF301551A6EE00830335 /* run.phpsh */,
+				658A04F4157A1E6C0079D84F /* README.md */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -250,6 +256,8 @@
 				6557EF311551A6EE00830335 /* run.phpsh in Resources */,
 				65E359611564302E007BD73C /* LICENSE in Resources */,
 				6504E47B1571791000243F49 /* qoq in Resources */,
+				6504E4811575515D00243F49 /* Window.xib in Resources */,
+				658A04F5157A1E6C0079D84F /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
