@@ -63,6 +63,7 @@ You may omit 'exec'
     echo 'window setTitle: @"NewTitle";';
 
 Whitespaces are used to separate the parts of a command, therefore you have to replace whitespaces with "&_".
+    
     echo 'window setTitle: @"Hello&_how&_are&_you?";';
 
 ### Create a new window
