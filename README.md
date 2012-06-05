@@ -32,23 +32,23 @@ On launch the delegate will launch a PHP task with the script from {path/to/the/
 Commands
 --------
 
-### alloc {class} {identifier}
+    alloc {class} {identifier}
 Allocate a new instance of the given {class} and safe it with the name {identifier}
 
-### new {class} {identifier} {noInit}
+    new {class} {identifier} {noInit}
 Allocate a new instance of the given {class}, safe it with under {identifier} and invoke it's -init method
 If {noInit} is set the -init method will not be called (this is the same as the alloc command).
 
-### exec {identifier} {name:of:the:method:} {argument1}, … {argumentN}
+    exec {identifier} {name:of:the:method:} {argument1}, … {argumentN}
 Invoke the method {name:of:the:method:} of the object with the identifier {identifier} and the given arguments.
 
-### {identifier} {name:of:the:method:} {argument1}, … {argumentN}
+    {identifier} {name:of:the:method:} {argument1}, … {argumentN}
 The short version of the exec command.
 
-### set {identifier} {identifierOfTheNewValue}
+    set {identifier} {identifierOfTheNewValue}
 Replace the variable {identifier} with the value of {identifierOfTheNewValue}.
 
-### get {identifier}
+    get {identifier}
 If this command is called the PopServer will export the value of {identifier} to the PHP script.
 
 Examples
