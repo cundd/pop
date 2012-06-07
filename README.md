@@ -131,7 +131,7 @@ On startup POP creates a pipe with the path defined in the qoqPipeName property,
 - The PHP script can use the received value
 
 ### Retrieving values with QOQ
-To retrieve values with QOQ you can use runtime directly
+To retrieve values with QOQ you can use the runtime directly
 
     \Qoq\QoqRuntime::getValueForKeyPath('window.title');
 
