@@ -91,11 +91,11 @@
 		6557EEE7155181A800830335 = {
 			isa = PBXGroup;
 			children = (
-				658A04F7157A3B300079D84F /* README.md */,
+				6557EEF5155181A800830335 /* Frameworks */,
 				6557EEFC155181A800830335 /* pop */,
 				6557EF19155181A900830335 /* popTests */,
-				6557EEF5155181A800830335 /* Frameworks */,
 				6557EEF3155181A800830335 /* Products */,
+				658A04F7157A3B300079D84F /* README.md */,
 			);
 			sourceTree = "<group>";
 		};

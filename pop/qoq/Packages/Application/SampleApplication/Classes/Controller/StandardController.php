@@ -15,7 +15,9 @@ class StandardController extends AbstractController {
 	 * @return void
 	 */
 	public function handle($command){
-		echo 'window setTitle: @"Hallo&_wie&_geht&_es&_dir?";';
+        $oldTitle = $this->getValueForKeyPath('window.title');
+        $oldTitle = \Qoq\QoqRuntime::escapeString($oldTitle);
+		echo 'window setTitle: @"This&_has&_been&_the&_old&_title:&_' . $oldTitle . '";';
 	}
 }
 

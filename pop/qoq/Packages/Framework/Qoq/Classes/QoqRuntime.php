@@ -253,10 +253,10 @@ class QoqRuntime {
 	 * @param mixed $value Description
 	 * @return string  The string representation of the value
 	 */
-	public function getCommandStringForValue($value){
+	static public function getCommandStringForValue($value){
 		$result = '';
 		if(is_string($value)){
-			$result = $this->prepareString($value);
+			$result = self::prepareString($value);
 		} else if(is_int($value)){
 			$result = "(int)$value";
 		} else if(is_float($value)){
@@ -273,9 +273,19 @@ class QoqRuntime {
 	 * @param string $string
 	 * @return string  Returns the prepared string
 	 */
-	protected function prepareString($string){
+	static public function prepareString($string){
         $string = str_replace(' ', '&_', $string);
         return '@"' . $string . '"';
+	}
+    
+    /**
+	 * Escape the string.
+	 * 
+	 * @param string $string
+	 * @return string  Returns the escaped string
+	 */
+	static public function escapeString($string){
+        return str_replace(' ', '&_', $string);
 	}
 }
     

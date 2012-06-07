@@ -299,16 +299,16 @@ static PopServer *sharedPopServerInstance = nil;
 #pragma mark Parsing commands
 - (BOOL)parseCommandString:(NSString *)commandString{
     NSArray *commandParts = [commandString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    NSString *command = [commandParts objectAtIndex:0];
+    NSString *signal = [commandParts objectAtIndex:0];
     
 #if SHOW_DEBUG_INFO
     NSLog(@"Parsing command string '%@'", commandString);
 #endif
     
     // Handle the commands
-    if([command isEqualToString:@"#"] || [commandString hasPrefix:@">"] || [commandString hasPrefix:@"//"]){ // comments
+    if([signal isEqualToString:@"#"] || [commandString hasPrefix:@">"] || [commandString hasPrefix:@"//"]){ // comments
         say(@"%@\n", commandString);
-    } else if([command isEqualToString:@"new"] || [command isEqualToString:@"alloc"]){ // object creation
+    } else if([signal isEqualToString:@"new"] || [signal isEqualToString:@"alloc"]){ // object creation
         id object;
         BOOL init = TRUE;
         NSString *newIdentifier;
@@ -325,7 +325,7 @@ static PopServer *sharedPopServerInstance = nil;
         }
         
         // If the command is alloc, dont call init
-        if([command isEqualToString:@"alloc"]){
+        if([signal isEqualToString:@"alloc"]){
             init = FALSE;
         }
         
@@ -352,26 +352,26 @@ static PopServer *sharedPopServerInstance = nil;
 #if SHOW_DEBUG_INFO
         NSLog(@"Object: %@", object);
 #endif
-    } else if([command isEqualToString:@"printf"]){ // echo
+    } else if([signal isEqualToString:@"printf"]){ // echo
         NSString *format = [commandParts objectAtIndex:1];
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
         NSLog(format, object);
-    } else if([command isEqualToString:@"echo"]){ // printf
+    } else if([signal isEqualToString:@"echo"]){ // printf
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:1]];
         NSLog(@"%@", object);
-    } else if([command isEqualToString:@"get"]){ // get
+    } else if([signal isEqualToString:@"get"]){ // get
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:1]];
         NSString *returnCommand = [NSString stringWithFormat:@"%@", object];
         [self sendObject:returnCommand];
-    } else if([command isEqualToString:@"set"]){ // set
+    } else if([signal isEqualToString:@"set"]){ // set
         NSString *objectIdentifier = [[commandParts objectAtIndex:1] retain];
         NSObject *newValue = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
         [self setObject:newValue inPoolWithIdentifier:objectIdentifier];
-    } else if([command isEqualToString:@"breakpoint"]){ // breakpoint
+    } else if([signal isEqualToString:@"breakpoint"]){ // breakpoint
         NSString *objectIdentifier = [commandParts objectAtIndex:1];
         id object = [self findObjectWithIdentifier:objectIdentifier];
         NSLog(@"objectIdentifier: %@ object: %@",objectIdentifier, object);
-    } else if([command isEqualToString:@"throw"]){ // throw
+    } else if([signal isEqualToString:@"throw"]){ // throw
         id object = nil;
         NSString *name = [commandParts objectAtIndex:1];
         NSString *message = [commandParts objectAtIndex:2];
@@ -389,7 +389,7 @@ static PopServer *sharedPopServerInstance = nil;
         }
         exception = [NSException exceptionWithName:name reason:message userInfo:userInfo];
         @throw exception;
-    } else if([command isEqualToString:@"exec"]){ // method execution
+    } else if([signal isEqualToString:@"exec"]){ // method execution
         NSMutableArray * shiftedCommandParts = [NSMutableArray arrayWithArray:commandParts];
         [shiftedCommandParts removeObjectAtIndex:0];
         
@@ -449,14 +449,14 @@ static PopServer *sharedPopServerInstance = nil;
 
 #pragma mark Plugins
 - (BOOL)pluginHandleCommandParts:(NSArray *)commandParts{
-    NSString *command;
+    NSString *signal;
     NSString *notificationName;
     NSDictionary *notificationUserInfo;
     NSNotificationCenter *defaultNotificationCenter;
     
-    command = [commandParts objectAtIndex:0];
+    signal = [commandParts objectAtIndex:0];
     
-    if(![self hasPluginForCommand:command]){
+    if(![self hasPluginForCommand:signal]){
         return FALSE;
     }
     
@@ -464,9 +464,10 @@ static PopServer *sharedPopServerInstance = nil;
     defaultNotificationCenter = [NSNotificationCenter defaultCenter];
     notificationUserInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                             commandParts, @"commandParts", 
-                            command, @"command",
+                            signal, @"command",
+                            signal, @"signal",
                             nil];
-    notificationName = [NSString stringWithFormat:@"%@%@", PopNotificationNameUnfoundCommandPrefix, command];
+    notificationName = [NSString stringWithFormat:@"%@%@", PopNotificationNameUnfoundCommandPrefix, signal];
     [defaultNotificationCenter postNotificationName:notificationName object:self userInfo:notificationUserInfo];
     [defaultNotificationCenter postNotificationName:PopNotificationNameUnfoundCommandPrefix object:self userInfo:notificationUserInfo];
     return TRUE;
