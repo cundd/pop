@@ -233,6 +233,11 @@ static PopServer *sharedPopServerInstance = nil;
     selector = NSSelectorFromString(methodName);
     
     if(targetIsClass){
+#if !DEBUG
+        // If debug mode is not enabled skip the rest
+        NSLog(@"The target is a class, this is not supported");
+        return FALSE;
+#endif
         Class targetClass = NSClassFromString((NSString *)object);
         signature = [targetClass instanceMethodSignatureForSelector:selector];
         NSLog(@"Target is class %@ %@ %@ %s", object, targetClass, signature, (char *)selector);
@@ -596,7 +601,7 @@ static PopServer *sharedPopServerInstance = nil;
     static NSRegularExpression *regex;
     if(!regex){
         NSError * error = NULL;
-        regex = [NSRegularExpression regularExpressionWithPattern:@"[^0-9a-z|;|,|-|!|$|%|=|*|+|\\.|:| |_|@|&|\"|'|´|`|<|>|#|/|\\(|\\)|\n|\\|]"
+        regex = [NSRegularExpression regularExpressionWithPattern:@"[^0-9a-z|;|,|-|!|$|%|=|*|+|\\.|:| |_|@|&|\"|'|´|`|<|>|#|/|\\(|\\)|\n|\\\\|\\|]"
                                                           options:NSRegularExpressionCaseInsensitive
                                                             error:&error];
         if(error){

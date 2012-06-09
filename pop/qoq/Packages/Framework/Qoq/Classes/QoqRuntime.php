@@ -79,7 +79,9 @@ class QoqRuntime {
 	 */
 	public function dispatch($inputCommand){
 		$app = $this->getApplication();
-		$app->handle($inputCommand);
+		$commandParts = explode(' ', $inputCommand);
+		$app->setCommandParts($commandParts);
+		call_user_func_array(array($app, 'handle'), $commandParts);
 	}
 	
 	/**
@@ -118,10 +120,10 @@ class QoqRuntime {
 		$absoluteClassPathApplicationDirectory = __DIR__ . '/../../../Application/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
 		$absoluteClassPathFrameworkDirectory = __DIR__ . '/../../../Framework/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
 		
-		if(file_exists($absoluteClassPathFrameworkDirectory)){
-			require_once($absoluteClassPathFrameworkDirectory);
-		} else {
+		if(file_exists($absoluteClassPathApplicationDirectory)){
 			require_once($absoluteClassPathApplicationDirectory);
+		} else {
+			require_once($absoluteClassPathFrameworkDirectory);
 		}
 		return class_exists($class, FALSE);
 	}

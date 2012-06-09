@@ -42,8 +42,8 @@
     [self addPlugin:self selector:@selector(handleNSBundle:) forCommand:@"NSBundle"];
 }
 
-- (IBAction)exampleAction:(id)sender{
-    NSString *command = @"exampleAction:";
+- (IBAction)loadNibAction:(id)sender{
+    NSString *command = @"loadNibAction:";
     [self sendCommand:command sender:sender];
 }
 @end

@@ -175,5 +175,5 @@ The userInfo dictionary contains the command parts as a NSArray object for the k
 Issues and Todos
 ----------------
 
-- POP cannot invoke Objective-C class methods.
+- POP cannot invoke Objective-C class (static) methods.
 - POP cannot export non-scalar Objective-C objects (maybe include a JSON library).

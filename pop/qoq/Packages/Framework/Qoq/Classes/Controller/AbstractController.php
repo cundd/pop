@@ -9,9 +9,17 @@ namespace Qoq\Controller;
 
 abstract class AbstractController {
 	/**
+	 * The parts of the command that has been received from POP.
+	 * 
+	 * @var array<string>
+	 */
+	protected $commandParts = array();
+	
+	/**
 	 * Handles the given command.
 	 * 
 	 * @param string $command The command received from POP
+	 * @param string $arg1 The first of n arguments
 	 * @return void
 	 */
 	abstract public function handle($command);
@@ -47,6 +55,75 @@ abstract class AbstractController {
 	 */
 	public function setValueForKey($identifier, $value){
 		return \Qoq\QoqRuntime::setValueForKeyPath($identifier, $value);
+	}
+	
+	/**
+	 * Sends the given command to the POP server.
+	 * 
+	 * @param string $command The command to send
+	 * @return void
+	 */
+	public function sendCommand($command){
+		return \Qoq\QoqRuntime::sendCommand($command);
+	}
+	
+	/**
+	 * Converts the command to a method name.
+	 *
+	 * @example:
+	 * Converts
+	 *  loadNibNamed:owner:
+	 *
+	 * into
+	 *  loadNibNamedOwner
+	 *
+	 * @param string $command The command to convert
+	 * @return string  Returns the converted method name
+	 */
+	public function convertCommandToMethodName($command){
+		$command = trim($command);
+		
+		/*
+		 * If the command is "exec" read the command from the original command
+		 * parts
+		 */
+		if($command == 'exec'){
+			$commandParts = $this->getCommandParts();
+			$command = $commandParts[2]; // The element at 1 is the sender
+		}
+		
+		// Remove the colons from the command
+		if(strpos($command, ':')){
+			// Split the command string into words
+			$words = explode(':', strtolower($command));
+			
+			$command = '';
+			foreach ($words as $word) {
+				$command .= ucfirst(trim($word));
+			}
+		}
+		
+		return $command;
+	}
+	
+	/**
+	 * Returns the parts of the command that has been received from POP.
+	 *
+	 * @return array<string>
+	 */
+	public function getCommandParts() {
+		return $this->commandParts;
+	}
+	
+	/**
+	 * Setter for the parts of the command that has been received from POP.
+	 *
+	 * @param array<string>
+	 *
+	 * @return void
+	 */
+	public function setCommandParts($value) {
+		$this->commandParts = $value;
 	}
 }
 
