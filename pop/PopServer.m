@@ -325,6 +325,10 @@ static PopServer *sharedPopServerInstance = nil;
                [[commandParts objectAtIndex:3] isEqualToString:@"true"] || 
                [[commandParts objectAtIndex:3] isEqualToString:@"TRUE"] || 
                [[commandParts objectAtIndex:3] isEqualToString:@"1"]){
+                
+#if SHOW_DEBUG_INFO
+                NSLog(@"Don't init");
+#endif
                 init = FALSE;
             }
         }
@@ -423,10 +427,13 @@ static PopServer *sharedPopServerInstance = nil;
     NSString *objectMethod =        [[commandParts objectAtIndex:1] retain];
     NSArray * arguments =           [self commandPartsToArguments:commandParts];
     
-    
+    targetIsClass = FALSE;
     if([self identifierSignalsClass:objectIdentifier]){
         targetIsClass = TRUE;
         object = objectIdentifier;
+#if SHOW_DEBUG_INFO
+        NSLog(@"The target is a class (%@)", objectIdentifier);
+#endif
     } else if(!(object = [self findObjectWithIdentifier:objectIdentifier])){
 #if SHOW_DEBUG_INFO
         NSLog(@"No object");
@@ -445,8 +452,8 @@ static PopServer *sharedPopServerInstance = nil;
     } else {
 #if SHOW_DEBUG_INFO
         NSLog(@"Object doesn't respond to %@", objectMethod);
-        return FALSE;
 #endif
+        return FALSE;
     }
     return TRUE;
 }
@@ -531,6 +538,89 @@ static PopServer *sharedPopServerInstance = nil;
 
 
 #pragma mark Task management
+- (void)startTask{
+    NSProcessInfo * processInfo = [NSProcessInfo processInfo];
+    NSArray *args = [processInfo arguments];
+    for(NSString *processArgument in args){
+        if([processArgument isEqualToString:@"-a"]){
+            mode = CDPopModeInteractive;
+        }
+    }
+    
+    // Init
+    objectPool = [NSMutableDictionary dictionary];
+    [objectPool setValue:[NSNull null] forKey:@"nil"];
+    
+    pluginPool = [NSMutableDictionary dictionary];
+    
+    // Set the shared instance
+    sharedPopServerInstance = self;
+    
+    qoqUnknownSenderArgument = @"(unknownSender)";
+    
+    commandDelimiter = [[NSCharacterSet characterSetWithCharactersInString:@";\n\r"] retain];
+    commandQueue = @"";
+    
+    // Change to interactive mode if configured
+    if(mode == CDPopModeInteractive){
+        [self runInteractive];
+        return;
+    }
+    
+    // Register for receiving data
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadCompletionNotification object:nil];
+    
+    // Register 
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stopTask:) name:NSApplicationWillTerminateNotification object:nil];
+    
+    // Register for task termination
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:nil];
+    
+#if SHOW_DEBUG_INFO
+    NSLog(@"Call script %@ with arguments: %@", self.taskLaunchPath, self.taskArguments);
+#endif
+    if(task){
+        task = nil;
+    }
+    task = [[NSTask alloc] init];
+    
+    
+    // Create a named pipe
+    FILE *outputFile;
+    
+    outputFile = fopen([self.qoqPipeName UTF8String], "w+");
+    if(outputFile == NULL){
+        NSLog(@"Couldn't open the file '%@'", self.qoqPipeName);
+        [[NSApplication sharedApplication] terminate:nil];
+    }
+    qoqWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor: fileno(outputFile) closeOnDealloc: YES];
+    
+    
+    // Creating the pipe for reading from PHP
+    NSPipe *outputPipe = [NSPipe pipe];
+    popReadHandle = [outputPipe fileHandleForReading];
+    
+    [task setLaunchPath:self.taskLaunchPath];
+    [task setStandardOutput:outputPipe];
+    //	[task setStandardInput:inputPipe];
+    [task setArguments:self.taskArguments];
+    [task setCurrentDirectoryPath:@"~"];
+    
+    // Set the environment
+    NSDictionary *env = [NSDictionary dictionaryWithObjectsAndKeys:
+                         [NSNumber numberWithInt:processInfo.processIdentifier], @"popServerPid", 
+                         nil];
+    [task setEnvironment:env];
+    
+    @try{
+        [task launch];
+    } @catch(NSException * e){
+        NSLog(@"Exception: %@",e);
+    }
+    
+    [popReadHandle readInBackgroundAndNotify];
+}
+
 - (void)receiveData:(NSNotification *)aNotification{
     NSData * data = [[aNotification userInfo] objectForKey:NSFileHandleNotificationDataItem];
     NSString * justReceivedCommand;
@@ -601,7 +691,7 @@ static PopServer *sharedPopServerInstance = nil;
     static NSRegularExpression *regex;
     if(!regex){
         NSError * error = NULL;
-        regex = [NSRegularExpression regularExpressionWithPattern:@"[^0-9a-z|;|,|-|!|$|%|=|*|+|\\.|:| |_|@|&|\"|'|´|`|<|>|#|/|\\(|\\)|\n|\\\\|\\|]"
+        regex = [NSRegularExpression regularExpressionWithPattern:@"[^0-9a-z|;|,|\\-|!|$|%|=|*|+|\\.|:| |_|@|&|\"|'|´|`|<|>|#|/|\\(|\\)|\n|\\\\|\\|]"
                                                           options:NSRegularExpressionCaseInsensitive
                                                             error:&error];
         if(error){
@@ -717,79 +807,7 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
 -(id)init{
     self = [super init];
     if(self){
-        NSArray *args = [[NSProcessInfo processInfo] arguments];
-        for(NSString *processArgument in args){
-            if([processArgument isEqualToString:@"-a"]){
-                mode = CDPopModeInteractive;
-            }
-        }
-        
-        // Init
-        objectPool = [NSMutableDictionary dictionary];
-        [objectPool setValue:[NSNull null] forKey:@"nil"];
-        
-        pluginPool = [NSMutableDictionary dictionary];
-        
-        // Set the shared instance
-        sharedPopServerInstance = self;
-        
-        qoqUnknownSenderArgument = @"(unknownSender)";
-        
-        commandDelimiter = [[NSCharacterSet characterSetWithCharactersInString:@";\n\r"] retain];
-        commandQueue = @"";
-        
-        // Change to interactive mode if configured
-        if(mode == CDPopModeInteractive){
-            [self runInteractive];
-            return self;
-        }
-        
-        // Register for receiving data
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadCompletionNotification object:nil];
-        
-        // Register 
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stopTask:) name:NSApplicationWillTerminateNotification object:nil];
-        
-        // Register for task termination
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:nil];
-        
-#if SHOW_DEBUG_INFO
-        NSLog(@"Call script %@ with arguments: %@", self.taskLaunchPath, self.taskArguments);
-#endif
-        if(task){
-            task = nil;
-        }
-        task = [[NSTask alloc] init];
-        
-        
-        // Create a named pipe
-        FILE *outputFile;
-        
-        outputFile = fopen([self.qoqPipeName UTF8String], "w+");
-        if(outputFile == NULL){
-            NSLog(@"Couldn't open the file '%@'", self.qoqPipeName);
-            [[NSApplication sharedApplication] terminate:nil];
-        }
-        qoqWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor: fileno(outputFile) closeOnDealloc: YES];
-    
-        
-        // Creating the pipe for reading from PHP
-        NSPipe *outputPipe = [NSPipe pipe];
-        popReadHandle = [outputPipe fileHandleForReading];
-        
-        [task setLaunchPath:self.taskLaunchPath];
-        [task setStandardOutput:outputPipe];
-        //	[task setStandardInput:inputPipe];
-        [task setArguments:self.taskArguments];
-        [task setCurrentDirectoryPath:@"~"];
-        
-        @try{
-            [task launch];
-        } @catch(NSException * e){
-            NSLog(@"Exception: %@",e);
-        }
-        
-        [popReadHandle readInBackgroundAndNotify];
+        [self startTask];
     }
     return self;
 }

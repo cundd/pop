@@ -29,8 +29,9 @@
 }
 
 @property (assign) IBOutlet NSWindow *window;
+@property (assign) IBOutlet NSWindow *secondWindow;
 @property (assign) IBOutlet NSTextField *textfield;
 
-- (IBAction)exampleAction:(id)sender;
+- (IBAction)loadNibAction:(id)sender;
 
 @end

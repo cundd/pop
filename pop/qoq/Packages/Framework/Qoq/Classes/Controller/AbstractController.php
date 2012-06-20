@@ -16,13 +16,13 @@ abstract class AbstractController {
 	protected $commandParts = array();
 	
 	/**
-	 * Handles the given command.
+	 * Handles the given signal.
 	 * 
-	 * @param string $command The command received from POP
+	 * @param string $signal The signal received from POP
 	 * @param string $arg1 The first of n arguments
 	 * @return void
 	 */
-	abstract public function handle($command);
+	abstract public function handle($signal);
 	
 	/**
 	 * Queries the POP server for the value for the given identifier.
@@ -80,30 +80,30 @@ abstract class AbstractController {
 	 * @param string $command The command to convert
 	 * @return string  Returns the converted method name
 	 */
-	public function convertCommandToMethodName($command){
-		$command = trim($command);
+	public function convertSignalToMethodName($signal){
+		$signal = trim($signal);
 		
 		/*
 		 * If the command is "exec" read the command from the original command
 		 * parts
 		 */
-		if($command == 'exec'){
+		if($signal == 'exec'){
 			$commandParts = $this->getCommandParts();
-			$command = $commandParts[2]; // The element at 1 is the sender
+			$signal = $commandParts[2]; // The element at 1 is the sender
 		}
 		
 		// Remove the colons from the command
-		if(strpos($command, ':')){
+		if(strpos($signal, ':')){
 			// Split the command string into words
-			$words = explode(':', strtolower($command));
+			$words = explode(':', strtolower($signal));
 			
-			$command = '';
+			$signal = '';
 			foreach ($words as $word) {
-				$command .= ucfirst(trim($word));
+				$signal .= ucfirst(trim($word));
 			}
 		}
 		
-		return $command;
+		return $signal;
 	}
 	
 	/**

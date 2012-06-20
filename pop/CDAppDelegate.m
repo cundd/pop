@@ -28,7 +28,7 @@
 
 @implementation CDAppDelegate
 
-@synthesize textfield;
+@synthesize textfield, secondWindow;
 @synthesize window = _window;
 
 - (void)applicationWillTerminate:(NSNotification *)notification{
@@ -36,6 +36,15 @@
 
 -(void)handleNSBundle:(NSNotification*)notif{
     NSLog(@"Plugin: %@", notif.userInfo);
+    //NSString * signal = [notif.userInfo objectForKey:@"signal"]; // This will be "NSBundle"
+    NSArray * commandParts = [notif.userInfo objectForKey:@"commandParts"];
+    NSString * method = [commandParts objectAtIndex:1];
+    
+    if([method isEqualToString:@"loadNibNamed:owner:"]){
+        NSString * bundleName = [commandParts objectAtIndex:2];
+        NSObject * owner = [commandParts objectAtIndex:3];
+        [NSBundle loadNibNamed:bundleName owner:owner];
+    }
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {

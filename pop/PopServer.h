@@ -109,6 +109,7 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
 - (void)taskDidTerminate:(NSNotification *)notif;
 - (void)stopTask:(NSNotification *)notif;
 - (void)stopTask;
+- (void)startTask;
 
 - (BOOL)runInteractive;
 - (void)runInteractiveLoop:(NSTimer *)aTimer;

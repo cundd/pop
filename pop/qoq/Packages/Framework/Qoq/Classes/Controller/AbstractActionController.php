@@ -9,17 +9,17 @@ namespace Qoq\Controller;
 
 abstract class AbstractActionController extends AbstractController {
 	/**
-	 * Handles the given command.
+	 * Handles the given signal.
 	 * 
-	 * @param string $command The command received from POP
+	 * @param string $signal The signal received from POP
 	 * @param string $arg1 The first of n arguments
 	 * @return void
 	 */
-    public function handle($command){
+    public function handle($signal){
 		$arguments = func_get_args();
-		$command = $this->convertCommandToMethodName($command);
-		if(method_exists($this, $command)){
-			call_user_func_array(array($this, $command), $arguments);
+		$signal = $this->convertSignalToMethodName($signal);
+		if(method_exists($this, $signal)){
+			call_user_func_array(array($this, $signal), $arguments);
 		} else {
 			call_user_func_array(array($this, 'errorAction'), $arguments);
 		}
@@ -34,8 +34,8 @@ abstract class AbstractActionController extends AbstractController {
 	 * @param string $command The command, that this controller doesn't implement
 	 * @return void
 	 */
-	public function errorAction($command){
-		$this->sendCommand('# The controller ' . get_class($this) . ' doesn\' respond to ' . $command);
+	public function errorAction($signal){
+		$this->sendCommand('# The controller ' . get_class($this) . ' doesn\' respond to ' . $signal);
 	}
 }
 
