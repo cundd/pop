@@ -116,6 +116,12 @@ Whitespaces are used to separate the parts of a command, therefore you have to r
     echo "exec theIdentifier initWithContentRect:styleMask:backing:defer: @NSMakeRect(0,0,200,200) (uint)13 (uint)2 (int)1;";
     echo "exec theIdentifier makeKeyAndOrderFront: nil;";
 
+### Casting
+The Objective-C arguments that need to be of a distinct data type, have to be preceded with a syntax that is similar to the one of casts.
+
+- `(int)` signals an integer
+- `(uint)` signals an unsigned integer
+
 Communicate with QOQ
 --------------------
 
@@ -143,6 +149,15 @@ or even simpler, create a subclass of the AbstractController
             $oldTitle = $this->getValueForKeyPath('window.title');
         }
     }
+
+### Using the Proxy Object
+The QOQ system provides the \Qoq\ProxyObject class that may be used to communicate in an object oriented way. The proxy translates method calls to commands for the POP server, so the commands don't have to be created manually.
+
+    $window = \Qoq\QoqRuntime::makeInstance('NSWindow', TRUE);
+    $window->initWithContentRect_styleMask_backing_defer('@NSMakeRect(0,200,800,600)', uint(13), uint(2), (int)1);
+    $window->makeKeyAndOrderFront(nil());
+
+The example also shows the usage of value object functions like `uint()` or `int()`. These functions return value object instances like \Qoq\Uint, that will be converted to casted argument strings (see "Casting").
 
 Exposing your Cocoa code through Plugins
 ----------------------------------------
