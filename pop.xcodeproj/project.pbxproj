@@ -21,6 +21,7 @@
 		6557EF21155181A900830335 /* popTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF20155181A900830335 /* popTests.m */; };
 		6557EF2F15518A4300830335 /* run.php in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF2E15518A4300830335 /* run.php */; };
 		6557EF311551A6EE00830335 /* run.phpsh in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF301551A6EE00830335 /* run.phpsh */; };
+		657557FB1595D9DF00B1FCEF /* PopProxyObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 657557FA1595D9DF00B1FCEF /* PopProxyObject.m */; };
 		658A04F8157A3B300079D84F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 658A04F7157A3B300079D84F /* README.md */; };
 		65E359611564302E007BD73C /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 65E359601564302E007BD73C /* LICENSE */; };
 		65E3599015679E8C007BD73C /* PopServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 65E3598F15679E8C007BD73C /* PopServer.m */; };
@@ -34,6 +35,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 6557EEF1155181A800830335;
 			remoteInfo = pop;
+		};
+		657557E91595C5BD00B1FCEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 657557E41595C5BC00B1FCEF /* SampleApplication.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 657557AC1595C5BB00B1FCEF;
+			remoteInfo = SampleApplication;
+		};
+		657557EB1595C5BD00B1FCEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 657557E41595C5BC00B1FCEF /* SampleApplication.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 657557CD1595C5BC00B1FCEF;
+			remoteInfo = SampleApplicationTests;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -61,6 +76,9 @@
 		6557EF20155181A900830335 /* popTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = popTests.m; sourceTree = "<group>"; };
 		6557EF2E15518A4300830335 /* run.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; path = run.php; sourceTree = "<group>"; };
 		6557EF301551A6EE00830335 /* run.phpsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = run.phpsh; sourceTree = "<group>"; };
+		657557E41595C5BC00B1FCEF /* SampleApplication.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SampleApplication.xcodeproj; path = SampleApplication/SampleApplication.xcodeproj; sourceTree = "<group>"; };
+		657557F91595D9DF00B1FCEF /* PopProxyObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopProxyObject.h; sourceTree = "<group>"; };
+		657557FA1595D9DF00B1FCEF /* PopProxyObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopProxyObject.m; sourceTree = "<group>"; };
 		658A04F7157A3B300079D84F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		65E359601564302E007BD73C /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		65E3598E15679E8C007BD73C /* PopServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopServer.h; sourceTree = "<group>"; };
@@ -96,6 +114,7 @@
 				6557EF19155181A900830335 /* popTests */,
 				6557EEF3155181A800830335 /* Products */,
 				658A04F7157A3B300079D84F /* README.md */,
+				657557E41595C5BC00B1FCEF /* SampleApplication.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -134,10 +153,12 @@
 				6557EF08155181A800830335 /* CDAppDelegate.h */,
 				6557EF09155181A800830335 /* CDAppDelegate.m */,
 				6557EF0B155181A900830335 /* MainMenu.xib */,
+				657557F91595D9DF00B1FCEF /* PopProxyObject.h */,
+				657557FA1595D9DF00B1FCEF /* PopProxyObject.m */,
 				65E3598E15679E8C007BD73C /* PopServer.h */,
 				65E3598F15679E8C007BD73C /* PopServer.m */,
-				6557EEFD155181A800830335 /* Supporting Files */,
 				6504E4801575515D00243F49 /* secondWindow.xib */,
+				6557EEFD155181A800830335 /* Supporting Files */,
 			);
 			path = pop;
 			sourceTree = "<group>";
@@ -175,6 +196,15 @@
 				6557EF1C155181A900830335 /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		657557E51595C5BC00B1FCEF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				657557EA1595C5BD00B1FCEF /* SampleApplication.app */,
+				657557EC1595C5BD00B1FCEF /* SampleApplicationTests.octest */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -236,6 +266,12 @@
 			mainGroup = 6557EEE7155181A800830335;
 			productRefGroup = 6557EEF3155181A800830335 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 657557E51595C5BC00B1FCEF /* Products */;
+					ProjectRef = 657557E41595C5BC00B1FCEF /* SampleApplication.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				6557EEF1155181A800830335 /* pop */,
@@ -243,6 +279,23 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		657557EA1595C5BD00B1FCEF /* SampleApplication.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = SampleApplication.app;
+			remoteRef = 657557E91595C5BD00B1FCEF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		657557EC1595C5BD00B1FCEF /* SampleApplicationTests.octest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = SampleApplicationTests.octest;
+			remoteRef = 657557EB1595C5BD00B1FCEF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		6557EEF0155181A800830335 /* Resources */ = {
@@ -295,6 +348,7 @@
 				6557EF03155181A800830335 /* main.m in Sources */,
 				6557EF0A155181A800830335 /* CDAppDelegate.m in Sources */,
 				65E3599015679E8C007BD73C /* PopServer.m in Sources */,
+				657557FB1595D9DF00B1FCEF /* PopProxyObject.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

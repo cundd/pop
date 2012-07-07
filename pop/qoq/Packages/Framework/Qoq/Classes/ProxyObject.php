@@ -5,6 +5,7 @@ namespace Qoq;
  * @license
  */
 
+use Qoq\QoqRuntime as Runtime;
 use Qoq\Helpers\ObjectHelper as ObjectHelper;
 
 /**
@@ -46,7 +47,7 @@ class ProxyObject {
 	 * @param string $className The name of the represented class.
 	 * @return object
 	 */
-	public function __construct($className){
+	public function __construct($className) {
 		$this->_className = $className;
 		$this->_uuid = 'inst-' . $className . '-' . time();
 		return $this;
@@ -57,8 +58,18 @@ class ProxyObject {
 	 * 
 	 * @return string
 	 */
-	public function getUuid(){
+	public function getUuid() {
 		return $this->_uuid;
+	}
+	
+	/**
+	 * Sets the unique identifier of the object.
+	 *
+	 * @param string $uuid The new unique identifier
+	 * @return void
+	 */
+	public function setUuid($uuid) {
+		$this->_uuid = $uuid;
 	}
 	
 	/**
@@ -67,17 +78,17 @@ class ProxyObject {
 	 * @param string $keyPath The key path of the value to get
 	 * @return object  The value for the key path
 	 */
-	public function getValueForKeyPath($keyPath){
+	public function getValueForKeyPath($keyPath) {
 		$value = ObjectHelper::getValueForKeyPathOfObject($keyPath, $this);
-		if(!$value){
-			$value = \Qoq\QoqRuntime::getValueForKeyPath($keyPath);
+		if (!$value) {
+			$value = Runtime::getValueForKeyPath($this->getUuid() . '.' . $keyPath);
 		}
 		return $value;
 	}
 	/**
 	 * @see getValueForKeyPath()
 	 */
-	public function getValueForKey($keyPath){
+	public function getValueForKey($keyPath) {
 		return $this->getValueForKeyPath($keyPath);
 	}
 	
@@ -88,15 +99,15 @@ class ProxyObject {
 	 * @param object $value The new value to set
 	 * @return void
 	 */
-	public function setValueForKeyPath($keyPath, $value){
-		if(!ObjectHelper::setValueForKeyPathOfObject($keyPath, $value, $this)){
-			\Qoq\QoqRuntime::setValueForKeyPath($keyPath, $value);
+	public function setValueForKeyPath($keyPath, $value) {
+		if (!ObjectHelper::setValueForKeyPathOfObject($keyPath, $value, $this)) {
+			Runtime::setValueForKeyPath($this->getUuid() . '.' . $keyPath, $value);
 		}
 	}
 	/**
 	 * @see setValueForKeyPath()
 	 */
-	public function setValueForKey($keyPath, $value){
+	public function setValueForKey($keyPath, $value) {
 		return $this->setValueForKeyPath($keyPath, $value);
 	}
 	
@@ -112,6 +123,15 @@ class ProxyObject {
 	}
 	
 	/**
+	 * Returns the unique identifier of the object when converted to a string.
+	 * 
+	 * @return string
+	 */
+	public function __toString() {
+		return $this->getUuid();
+	}
+	
+	/**
 	 * Tries to dynamically resolve methods.
 	 *
 	 * If the method name starts with 'set' setValueForKey() will be called.
@@ -122,17 +142,17 @@ class ProxyObject {
 	 * @param array $arguments Arguments sent to the method
 	 * @return mixed
 	 */
-	public function __call($name, $arguments){
+	public function __call($name, $arguments) {
 		$prefix = substr($name, 0, 3);
 		$property = lcfirst(substr($name, 3));
-		if($prefix === 'set'){
+		if ($prefix === 'set') {
 			return $this->setValueForKeyPath($property, $arguments[0]);
-		} else if($prefix === 'get'){
+		} else if ($prefix === 'get') {
 			return $this->getValueForKeyPath($property);
 		}
 		
-		$command = \Qoq\QoqRuntime::convertMethodNameToCommand($this, $name, $arguments);
-		return \Qoq\QoqRuntime::sendCommand($command);
+		$command = Runtime::convertMethodNameToCommand($this, $name, $arguments);
+		return Runtime::sendCommand($command);
 	}
 }
 

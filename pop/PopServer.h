@@ -24,6 +24,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import <sys/stat.h>
+#import "PopProxyObject.h"
 
 
 #ifndef kCDInteractiveTimerInterval
@@ -35,7 +36,7 @@
 #endif
 
 #ifndef SHOW_DEBUG_INFO
-#define SHOW_DEBUG_INFO 1
+#define SHOW_DEBUG_INFO 0
 #endif
 
 

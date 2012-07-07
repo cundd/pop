@@ -29,9 +29,9 @@ class Data {
 	 * @param string $keyPath The key path of the value to get
 	 * @return object  The value for the key path
 	 */
-	public function getValueForKeyPath($keyPath){
+	public function getValueForKeyPath($keyPath) {
 		$value = ObjectHelper::getValueForKeyPathOfObject($keyPath, $this);
-		if(!$value){
+		if (!$value) {
 			$value = \Qoq\QoqRuntime::getValueForKeyPath($keyPath);
 		}
 		return $value;
@@ -39,7 +39,7 @@ class Data {
 	/**
 	 * @see getValueForKeyPath()
 	 */
-	public function getValueForKey($keyPath){
+	public function getValueForKey($keyPath) {
 		return $this->getValueForKeyPath($keyPath);
 	}
 	
@@ -50,15 +50,15 @@ class Data {
 	 * @param object $value The new value to set
 	 * @return void
 	 */
-	public function setValueForKeyPath($keyPath, $value){
-		if(!ObjectHelper::setValueForKeyPathOfObject($keyPath, $value, $this)){
+	public function setValueForKeyPath($keyPath, $value) {
+		if (!ObjectHelper::setValueForKeyPathOfObject($keyPath, $value, $this)) {
 			\Qoq\QoqRuntime::setValueForKeyPath($keyPath, $value);
 		}
 	}
 	/**
 	 * @see setValueForKeyPath()
 	 */
-	public function setValueForKey($keyPath, $value){
+	public function setValueForKey($keyPath, $value) {
 		return $this->setValueForKeyPath($keyPath, $value);
 	}
 	
@@ -73,12 +73,12 @@ class Data {
 	 * @param array $arguments Arguments sent to the method
 	 * @return mixed
 	 */
-	public function __call($name, $arguments){
+	public function __call($name, $arguments) {
 		$prefix = substr($name, 0, 3);
 		$property = lcfirst(substr($name, 3));
-		if($prefix === 'set'){
+		if ($prefix === 'set') {
 			return $this->setValueForKeyPath($property, $arguments[0]);
-		} else if($prefix === 'get'){
+		} else if ($prefix === 'get') {
 			return $this->getValueForKeyPath($property);
 		}
 		

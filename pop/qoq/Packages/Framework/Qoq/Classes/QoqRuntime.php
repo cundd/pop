@@ -63,14 +63,17 @@ class QoqRuntime {
 	 * 
 	 * @return QoqRuntime
 	 */
-	public function __construct(){
-		if(self::$sharedInstance === NULL){
+	public function __construct() {
+		if (self::$sharedInstance === NULL) {
 			// Initialize the runtime
 			spl_autoload_register(array(__CLASS__, 'loadClassFile'));
 			register_shutdown_function(array(__CLASS__, 'shutDown'));
 			
+            #set_error_handler(array($this, 'error'));
+            #set_exception_handler(array($this, 'error'));
+            
 			// Set the error output options
-			if($this->getRunStandalone()){
+			if ($this->getRunStandalone()) {
 				error_reporting(E_ALL);
 				ini_set('display_errors', TRUE);
 			} else {
@@ -93,25 +96,26 @@ class QoqRuntime {
 	 * 
 	 * @return void
 	 */
-	public function run(){
+	public function run() {
 		$runCounter = 0;
         $checkIfServerIsAlive = 0;
-        $this->getApplication();
-		
+		static $calledApplicationDidFinishLaunching = FALSE;
+        
         $this->pipe = fopen($this->getPipeName(), 'r');
-		while(1){
+		$this->getApplication();
+		while (1) {
 			$line = trim(fread($this->pipe, 1024));
-			if($line){
+			if ($line) {
                 $this->dispatch($line);
 			}
             
             // Check if the server is alive every 1000th run
-            if($this->terminateIfServerIsNotAlive && !$checkIfServerIsAlive--){
+            if ($this->terminateIfServerIsNotAlive && !$checkIfServerIsAlive--) {
                 $this->checkIfServerIsAlive();
                 $checkIfServerIsAlive = 100;
             }
 			
-			if(++$runCounter > 1000 && $this->runStandalone){
+			if (++$runCounter > 1000 && $this->runStandalone) {
 				exit();
 			}
 			usleep(100000);
@@ -129,14 +133,14 @@ class QoqRuntime {
 	 * @param string $inputCommand
 	 * @return void
 	 */
-	public function dispatch($inputCommand){
+	public function dispatch($inputCommand) {
 		$app = $this->getApplication();
 		$commandParts = explode(' ', $inputCommand);
 		$app->setCommandParts($commandParts);
         
         try{
             call_user_func_array(array($app, 'handle'), $commandParts);
-        } catch(Exception $e){
+        } catch(Exception $e) {
             self::sendCommand('throw ' . get_class($e) . ' ' . $e->getMessage() . ' ' . $e->getCode());
         }
 	}
@@ -146,11 +150,19 @@ class QoqRuntime {
 	 * 
 	 * @return object
 	 */
-	public function getApplication(){
-		if(!$this->application){
+	public function getApplication() {
+		if (!$this->application) {
 			$settings = require_once(__DIR__ . '/../../../../Configuration/Settings.php');
 			$applicationControllerClass = $settings['PrincipalClass'];
 			$this->application = self::makeInstance($applicationControllerClass);
+            
+			/*
+			 * Call the applications applicationDidFinishLaunching() if the
+			 * method exists
+			 */
+			if (method_exists($this->application, 'applicationDidFinishLaunching')) {
+				$this->application->applicationDidFinishLaunching();
+			}
 			
 			$this->terminateIfServerIsNotAlive = $settings['TerminateIfServerIsNotAlive'];
 		}
@@ -168,10 +180,10 @@ class QoqRuntime {
 	 * @param string $class The class name including the namespace
 	 * @return boolean  Returns TRUE if the class file could be loaded, otherwise FALSE
 	 */
-	static public function loadClassFile($class){
+	static public function loadClassFile($class) {
 		$controllerClassPath = str_replace('\\', '/', $class);
 		$firstSlashPosition = strpos($controllerClassPath, '/');
-		if($firstSlashPosition === FALSE){
+		if ($firstSlashPosition === FALSE) {
 			return FALSE;
 		}
 		$package = substr($controllerClassPath, 0, $firstSlashPosition);
@@ -179,12 +191,11 @@ class QoqRuntime {
 		$absoluteClassPathApplicationDirectory = __DIR__ . '/../../../Application/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
 		$absoluteClassPathFrameworkDirectory = __DIR__ . '/../../../Framework/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
 		
-		if(file_exists($absoluteClassPathApplicationDirectory)){
+		if (file_exists($absoluteClassPathApplicationDirectory)) {
 			require_once($absoluteClassPathApplicationDirectory);
 		} else {
 			require_once($absoluteClassPathFrameworkDirectory);
 		}
-		return class_exists($class, FALSE);
 	}
 	
 	/**
@@ -199,21 +210,21 @@ class QoqRuntime {
 	 * @param array<mixed> $arguments An array of arguments to pass to the constructor
 	 * @return object  The instance of the class, or NULL on error
 	 */
-	static public function makeInstance($class, $arguments = array()){
+	static public function makeInstance($class, $arguments = array()) {
 		 // Try to load the class file
-		if(self::loadClassFile($class)){
-			if(func_num_args() > 0){
+		if (self::loadClassFile($class)) {
+			if (func_num_args() > 0) {
 				return new $class($arguments);
 			} else {
 				return new $class();
 			}
 		} else
 		// If the class name doesn't contain a backslash try to create a Cocoa instance
-		if(strpos($class, '\\') === FALSE){
+		if (strpos($class, '\\') === FALSE) {
 			$proxyObject = new ProxyObject($class);
 			$identifier = $proxyObject->getUuid();
 			
-			if(!is_array($arguments)){
+			if (!is_array($arguments)) {
 				$arguments = array($arguments);
 			}
 			self::sendCommand('new ' . $class . ' ' . $identifier . ' ' . implode(' ', $arguments));
@@ -223,6 +234,24 @@ class QoqRuntime {
 		}
 		return NULL;
 	}
+	
+	/**
+	 * Creates a Proxy Object from the result of a POP get request.
+	 * 
+	 * @param string $value The value returned from a POP get request (i.e. <NSView: 0x4004c8b40>)
+	 * @param string $identifier The identifier which retrieved the result
+	 * @return ProxyObject  Returns the Proxy Object representing the POP result
+	 */
+	static public function makeInstanceFromPopReturn($value, $identifier) {
+		$colonLocation = strpos($value, ':');
+		$class = substr($value, 1, $colonLocation - 1);
+		
+		$proxyObject = new ProxyObject($class);
+		$proxyObject->setUuid($identifier);
+		$proxyObject->setData($value);
+		return $proxyObject;
+	}
+	
 	
 	
 	
@@ -235,15 +264,19 @@ class QoqRuntime {
 	 * @param string $identifier The identifier of the value to get
 	 * @return object  The value for the identifier
 	 */
-	static public function getValueForKeyPath($identifier){
+	static public function getValueForKeyPath($identifier) {
 		$command = "get $identifier";
 		self::sendCommand($command);
-		return self::sharedInstance()->waitForResponse();
+		$value = self::sharedInstance()->waitForResponse();
+        if (substr($value, 0, 1) === '<' && strpos($value, ': 0x') !== FALSE) {
+            $value = self::makeInstanceFromPopReturn($value, $identifier);
+        }
+        return $value;
 	}
 	/**
 	 * @see getValueForKeyPath()
 	 */
-	static public function getValueForKey($identifier){
+	static public function getValueForKey($identifier) {
 		return self::getValueForKeyPath($identifier);
 	}
 	
@@ -254,7 +287,7 @@ class QoqRuntime {
 	 * @param object $value The new value to set
 	 * @return void
 	 */
-	static public function setValueForKeyPath($identifier, $value){
+	static public function setValueForKeyPath($identifier, $value) {
 		$value = self::convertValueToArgumentString($value);
 		$command = "set $identifier $value";
 		self::sendCommand($command);
@@ -262,7 +295,7 @@ class QoqRuntime {
 	/**
 	 * @see setValueForKeyPath()
 	 */
-	static public function setValueForKey($identifier, $value){
+	static public function setValueForKey($identifier, $value) {
 		self::setValueForKeyPath($identifier, $value);
 	}
 	
@@ -272,7 +305,7 @@ class QoqRuntime {
 	 * @param string $command The command to send
 	 * @return void
 	 */
-	static public function sendCommand($command){
+	static public function sendCommand($command) {
 		echo $command . PHP_EOL;
 	}
 	
@@ -281,10 +314,10 @@ class QoqRuntime {
 	 * 
 	 * @return object  Returns the string representation
 	 */
-	public function waitForResponse(){
-		while(1){
+	public function waitForResponse() {
+		while (1) {
 			$line = trim(fread($this->pipe, 1024));
-			if($line){
+			if ($line) {
 				return $line;
 			}
 			usleep(100000);
@@ -296,8 +329,8 @@ class QoqRuntime {
 	 * 
 	 * @return string
 	 */
-	public function getPipeName(){
-		if(!$this->pipeName){
+	public function getPipeName() {
+		if (!$this->pipeName) {
 			$this->pipeName = '/tmp/qoq_pipe';
 		}
 		return $this->pipeName;
@@ -310,7 +343,7 @@ class QoqRuntime {
 	 * 
 	 * @return void
 	 */
-	public function setPipeName($newName){
+	public function setPipeName($newName) {
 		$this->pipeName = $newName;
 	}
 	
@@ -325,8 +358,8 @@ class QoqRuntime {
 	 * 
 	 * @return QoqRuntime
 	 */
-	static public function sharedInstance(){
-		if(self::$sharedInstance === NULL){
+	static public function sharedInstance() {
+		if (self::$sharedInstance === NULL) {
 			new QoqRuntime();
 		}
 		return self::$sharedInstance;
@@ -345,13 +378,13 @@ class QoqRuntime {
 	 * @param string $command The command to convert
 	 * @return string  Returns the converted method name
 	 */
-	static public function convertCommandToMethodName($command){
+	static public function convertCommandToMethodName($command) {
 		$command = trim($command);
 		$commandParts = explode(' ', $command);
 		$command = $commandParts[2];
 		
 		// Remove the colons from the command
-		if(strpos($command, ':')){
+		if (strpos($command, ':')) {
 			// Split the command string into words
 			$words = explode(':', strtolower($command));
 			
@@ -378,22 +411,22 @@ class QoqRuntime {
 	 * @param array<mixed> $arguments The arguments to pass
 	 * @return string  Returns the command
 	 */
-	static public function convertMethodNameToCommand($identifier, $methodName, $arguments = array()){
+	static public function convertMethodNameToCommand($identifier, $methodName, $arguments = array()) {
 		$convertedArguments = array();
 		$argument = reset($arguments);
-		while ($argument){
+		while ($argument) {
 			$convertedArguments[] = self::convertValueToArgumentString($argument);
 			$argument = next($arguments);
 		}
 		
-		if(is_object($identifier)){
+		if (is_object($identifier)) {
 			$identifier = $identifier->getUuid();
 		}
 		
-		if(strpos($methodName, '_') || count($arguments) > 0){
-			$commandName = str_replace('_', ':', $methodName) . ':';
+		if (strpos($methodName, '_') || count($arguments) > 0) {
+			$methodName = str_replace('_', ':', $methodName) . ':';
 		}
-		return 'exec ' . $identifier . ' ' . $commandName . ' ' . implode(' ', $convertedArguments);
+		return 'exec ' . $identifier . ' ' . $methodName . ' ' . implode(' ', $convertedArguments);
 	}
 	
 	/**
@@ -402,17 +435,17 @@ class QoqRuntime {
 	 * @param mixed $value The value
 	 * @return string  The string representation of the value
 	 */
-	static public function convertValueToArgumentString($value){
+	static public function convertValueToArgumentString($value) {
 		$result = '';
-		if($value === Nil::nil()){
+		if ($value === Nil::nil()) {
 			$result = 'nil';
-		} else if(is_string($value) && substr($value, 0 ,1) !== '@'){
+		} else if (is_string($value) && substr($value, 0 ,1) !== '@') {
 			$result = self::prepareString($value);
-		} else if(is_int($value)){
+		} else if (is_int($value)) {
 			$result = "(int)$value";
-		} else if(is_float($value)){
+		} else if (is_float($value)) {
 			$result = "(float)$value";
-		} else if(is_object($value)){
+		} else if (is_object($value)) {
 			$result = $value . '';
 		} else {
 			$result = '' . $value;
@@ -426,7 +459,7 @@ class QoqRuntime {
 	 * @param string $string
 	 * @return string  Returns the prepared string
 	 */
-	static public function prepareString($string){
+	static public function prepareString($string) {
         $string = self::escapeString($string);
         return '@"' . $string . '"';
 	}
@@ -437,7 +470,7 @@ class QoqRuntime {
 	 * @param string $string
 	 * @return string  Returns the escaped string
 	 */
-	static public function escapeString($string){
+	static public function escapeString($string) {
         return str_replace(' ', '&_', $string);
 	}
 	
@@ -449,23 +482,46 @@ class QoqRuntime {
 	 * @return string The printed content.
 	 */
 	static public function pd($var1 = '__iresults_pd_noValue') {
+		$i = 0;
 		$args = func_get_args();
 		$output = '';
+		$backtrace = NULL;
+		$options = DEBUG_BACKTRACE_PROVIDE_OBJECT & DEBUG_BACKTRACE_IGNORE_ARGS;
 		
 		ob_start();
 		foreach ($args as $var) {
 			var_dump($var);
 		}
 		$output = '# ' . ob_get_clean();
-		$output = str_replace(array('\n', '\r'), '\n# ', $output);
+		$output = str_replace(array(PHP_EOL, '\n', '\r'), PHP_EOL . '# ', $output);
 		
 		self::sendCommand($output);
+		
+		// Get the caller
+		if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
+			$backtrace = debug_backtrace($options, 10);
+		} else {
+			$backtrace = debug_backtrace($options);
+		}
+		
+		$function = @$backtrace[$i]['function'];
+		while ($function == 'pd' OR $function == 'call_user_func_array' OR
+			  $function == 'call_user_func') {
+			$i++;
+			$function = @$backtrace[$i]['function'];
+		}
+		
+        $i--;
+		$file = @$backtrace[$i]['file'];
+		self::sendCommand('# ' . $file . ' @ ' . @$backtrace[$i]['line']);
+		
+		
 		return $output;
 	}
 	/**
 	 * @see pd()
 	 */
-	static public function predump(){
+	static public function predump() {
 		$args = func_get_args();
 		return call_user_func_array(array(self, 'pd'), $args);
 	}
@@ -475,9 +531,28 @@ class QoqRuntime {
 	 * 
 	 * @return void
 	 */
-	static public function shutDown(){
+	static public function shutDown() {
 		echo '# Shutdown';
 	}
+    
+    static public function error($errno, $errstr = '', $errfile = '', $errline = '') {
+		$output = '# ';
+        if ($errstr) {
+            $output = "#$errno: $errstr $errfile @ $errline";
+        } else {
+			$output = "#$errno";
+		}
+		
+		ob_start();
+		debug_print_backtrace();
+		$output .= '# ' . ob_get_clean();
+		
+		$output = implode("\n# \t", str_split($output, 80));
+		$output = str_replace(array('\n', '\r'), '\n# ', $output);
+		
+		self::sendCommand($output);
+		return $output;
+    }
 	
 	
 	
@@ -489,9 +564,9 @@ class QoqRuntime {
 	 * 
 	 * @return void
 	 */
-	public function checkIfServerIsAlive(){
+	public function checkIfServerIsAlive() {
 		$popServerPid = $this->getPopServerPid();
-        if($popServerPid === FALSE){
+        if ($popServerPid === FALSE) {
             self::sendCommand('# QOQ: The POP server PID couldn\'t be fetched.');
 			$this->terminateIfServerIsNotAlive = FALSE;
             return;
@@ -500,7 +575,7 @@ class QoqRuntime {
 		$processInfo = exec($shellCommand);
         
 		// If the command returned something like 
-		if(!trim($processInfo)){
+		if (!trim($processInfo)) {
 			$shutDownMessage = '# QOQ: The POP server doesn\'t seem to be alive. QOQ will now exit.';
 			trigger_error($shutDownMessage, E_USER_NOTICE);
 			self::sendCommand($shutDownMessage);
@@ -514,9 +589,9 @@ class QoqRuntime {
 	 * 
 	 * @return boolean
 	 */
-	public function getRunStandalone(){
-		if($this->runStandalone === -1){
-			if($this->getPopServerPid() === FALSE){
+	public function getRunStandalone() {
+		if ($this->runStandalone === -1) {
+			if ($this->getPopServerPid() === FALSE) {
 				$this->runStandalone = TRUE;
 			} else {
 				$this->runStandalone = FALSE;
@@ -530,7 +605,7 @@ class QoqRuntime {
 	 * 
 	 * @return integer
 	 */
-	public function getPopServerPid(){
+	public function getPopServerPid() {
 		return getenv('popServerPid');
 	}
 }

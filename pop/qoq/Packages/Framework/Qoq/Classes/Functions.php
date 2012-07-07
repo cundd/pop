@@ -10,7 +10,7 @@
  * @param mixed $value A string.
  * @return \Qoq\ValueObject  Returns a value object
  */
-function string($value){
+function string($value) {
 	return new \Qoq\String($value);
 }
 
@@ -20,7 +20,7 @@ function string($value){
  * @param mixed $value A numeric value.
  * @@return \Qoq\ValueObject  Returns a value object
  */
-function int($value){
+function int($value) {
 	return new \Qoq\Int($value);
 }
 
@@ -30,7 +30,7 @@ function int($value){
  * @param mixed $value A numeric value.
  * @return \Qoq\ValueObject  Returns a value object
  */
-function uint($value){
+function uint($value) {
 	return new \Qoq\Uint($value);
 }
 
@@ -39,6 +39,6 @@ function uint($value){
  * 
  * @return Nil
  */
-function nil(){
+function nil() {
 	return \Qoq\Nil::makeInstance();
 }

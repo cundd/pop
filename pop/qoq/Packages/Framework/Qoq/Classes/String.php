@@ -15,7 +15,7 @@ class String extends ValueObject {
 	* 
     * @return string
     */
-   public function __toString(){
+   public function __toString() {
 	   return \Qoq\QoqRuntime::prepareString($this->value);
    }
 }

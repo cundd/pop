@@ -5,6 +5,8 @@ namespace Qoq;
  * @license
  */
 
+use \Qoq\Nil as Nil;
+
 /**
  * An abstract class to represent basic values.
  */
@@ -14,7 +16,7 @@ class ValueObject {
 	* 
 	* @var mixed
 	*/
-   protected $value = nil;
+   protected $value = NULL;
    
    /**
 	* Sets the given value as value of the object.
@@ -22,9 +24,9 @@ class ValueObject {
 	* @param mixed $value
     * @return ValueObject
     */
-   public function __construct($value){
-	  $this->value = $value;
-	  return $this;
+   public function __construct($value) {
+       $this->value = $value;
+       return $this;
    }
    
    /**
@@ -33,7 +35,7 @@ class ValueObject {
 	* 
     * @return string
     */
-   public function __toString(){
+   public function __toString() {
 	   return '' . $this->value;
    }
 }

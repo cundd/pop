@@ -30,13 +30,13 @@ abstract class AbstractController {
 	 * @param string $identifier The identifier of the value to get
 	 * @return object  The value for the identifier
 	 */
-	public function getValueForKeyPath($identifier){
+	public function getValueForKeyPath($identifier) {
 		return \Qoq\QoqRuntime::getValueForKeyPath($identifier);
 	}
 	/**
 	 * @see getValueForKeyPath()
 	 */
-	public function getValueForKey($identifier){
+	public function getValueForKey($identifier) {
 		return \Qoq\QoqRuntime::getValueForKeyPath($identifier);
 	}
 	
@@ -47,13 +47,13 @@ abstract class AbstractController {
 	 * @param object $value The new value to set
 	 * @return void
 	 */
-	public function setValueForKeyPath($identifier, $value){
+	public function setValueForKeyPath($identifier, $value) {
 		return \Qoq\QoqRuntime::setValueForKeyPath($identifier, $value);
 	}
 	/**
 	 * @see setValueForKeyPath()
 	 */
-	public function setValueForKey($identifier, $value){
+	public function setValueForKey($identifier, $value) {
 		return \Qoq\QoqRuntime::setValueForKeyPath($identifier, $value);
 	}
 	
@@ -63,7 +63,7 @@ abstract class AbstractController {
 	 * @param string $command The command to send
 	 * @return void
 	 */
-	public function sendCommand($command){
+	public function sendCommand($command) {
 		return \Qoq\QoqRuntime::sendCommand($command);
 	}
 	
@@ -80,20 +80,20 @@ abstract class AbstractController {
 	 * @param string $command The command to convert
 	 * @return string  Returns the converted method name
 	 */
-	public function convertSignalToMethodName($signal){
+	public function convertSignalToMethodName($signal) {
 		$signal = trim($signal);
 		
 		/*
 		 * If the command is "exec" read the command from the original command
 		 * parts
 		 */
-		if($signal == 'exec'){
+		if ($signal == 'exec') {
 			$commandParts = $this->getCommandParts();
 			$signal = $commandParts[2]; // The element at 1 is the sender
 		}
 		
 		// Remove the colons from the command
-		if(strpos($signal, ':')){
+		if (strpos($signal, ':')) {
 			// Split the command string into words
 			$words = explode(':', strtolower($signal));
 			

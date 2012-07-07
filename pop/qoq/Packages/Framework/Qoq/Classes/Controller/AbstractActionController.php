@@ -15,10 +15,10 @@ abstract class AbstractActionController extends AbstractController {
 	 * @param string $arg1 The first of n arguments
 	 * @return void
 	 */
-    public function handle($signal){
+    public function handle($signal) {
 		$arguments = func_get_args();
 		$signal = $this->convertSignalToMethodName($signal);
-		if(method_exists($this, $signal)){
+		if (method_exists($this, $signal)) {
 			call_user_func_array(array($this, $signal), $arguments);
 		} else {
 			call_user_func_array(array($this, 'errorAction'), $arguments);
@@ -34,7 +34,7 @@ abstract class AbstractActionController extends AbstractController {
 	 * @param string $command The command, that this controller doesn't implement
 	 * @return void
 	 */
-	public function errorAction($signal){
+	public function errorAction($signal) {
 		$this->sendCommand('# The controller ' . get_class($this) . ' doesn\' respond to ' . $signal);
 	}
 }

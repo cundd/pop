@@ -16,7 +16,7 @@ class Nil {
 	 * @param array $arguments Arguments sent to the method
 	 * @return mixed
 	 */
-	public function __call($name, $arguments){
+	public function __call($name, $arguments) {
 		return $this;
 	}
 	
@@ -27,31 +27,31 @@ class Nil {
 	 * @param array $arguments Arguments sent to the method
 	 * @return mixed
 	 */
-	static public function __callStatic($name, $arguments){
+	static public function __callStatic($name, $arguments) {
 		return $this;
 	}
 	
-	public function __invoke($x){
+	public function __invoke($x) {
 		return FALSE;
 	}
 	
-	public function __toString(){
+	public function __toString() {
 		return '';
 	}
 	
-	public function __get($key){
+	public function __get($key) {
 		return $this;
 	}
 	
-	public function __set($key, $value){
+	public function __set($key, $value) {
 		
 	}
 	
-	public function __isset($key){
+	public function __isset($key) {
 		return FALSE;
 	}
 	
-	public function __unset($key){
+	public function __unset($key) {
 		
 	}
 	
@@ -60,15 +60,15 @@ class Nil {
 	 * 
 	 * @return Nil
 	 */
-	static public function makeInstance(){
+	static public function makeInstance() {
 		return self::nil();
 	}
 	/**
 	 * @see makeInstance()
 	 */
-	static public function nil(){
+	static public function nil() {
 		static $instance;
-		if(!$instance){
+		if (!$instance) {
 			$instance = new static();
 		}
 		return $instance;

@@ -15,7 +15,7 @@ class Uint extends ValueObject {
 	* 
     * @return string
     */
-   public function __toString(){
+   public function __toString() {
 	   return '(uint)' . $this->value;
    }
 }

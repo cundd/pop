@@ -124,6 +124,16 @@ static PopServer *sharedPopServerInstance = nil;
                                  [[rectPoints objectAtIndex:3] floatValue]
                                  );
         [invocation setArgument:&rect atIndex:index];
+    } else if([argument hasPrefix:@"@NSMakePoint("]){
+        NSUInteger length = [argument length] - 13 - 1;
+        argument = [[argument substringWithRange:NSMakeRange(12, length)] stringByReplacingOccurrencesOfString:@" " withString:@""];
+        NSArray *points = [argument componentsSeparatedByString:@","];
+        NSPoint point = NSMakePoint(
+                                 [[points objectAtIndex:0] floatValue], 
+                                 [[points objectAtIndex:1] floatValue]
+                                 );
+        [invocation setArgument:&point atIndex:index];
+
     } else if([argument hasPrefix:@"@\""] || [argument hasPrefix:@"@'"]){
         NSUInteger length = [argument length] - 2 - 1;
         argument = [argument substringWithRange:NSMakeRange(2, length)];
@@ -171,28 +181,38 @@ static PopServer *sharedPopServerInstance = nil;
 }
 
 - (void)updateObject:(id)object forIdentifier:(NSString *)identifier{
-    [identifier retain];
     // Check if the identifier belongs to a property
     if([self respondsToSelector:NSSelectorFromString(identifier)]){
         [self setValue:object forKeyPath:identifier];
     } else {
         [self setObject:object inPoolWithIdentifier:identifier];
     }
-    [identifier release];
 }
 
 - (id)findObjectWithIdentifier:(NSString *)identifier{
-    id object;
+    NSObject * object;
+    NSString * firstPart, * secondPart;
+    NSRange range;
     
+    range = [identifier rangeOfString:@"."];
+    if(range.location == NSNotFound){
+        firstPart = identifier;
+    } else {
+        firstPart = [identifier substringToIndex:range.location];
+        secondPart = [identifier substringFromIndex:range.location + 1];
+    }
     if([self identifierSignalsClass:identifier]){
         object = identifier;
     } else {
-        object = [self findObjectInPoolWithIdentifier:identifier];
+        object = [self findObjectInPoolWithIdentifier:firstPart];
     }
     if(!object){
-        if([self isKVCCompliantForKey:identifier]){
-            object = [self valueForKeyPath:identifier];
+        if([self isKVCCompliantForKey:firstPart]){
+            object = [self valueForKeyPath:firstPart];
         }
+    }
+    if(range.location != NSNotFound){
+        return [object valueForKeyPath:secondPart];
     }
     return object;
 }
@@ -229,7 +249,6 @@ static PopServer *sharedPopServerInstance = nil;
     SEL selector;
     
     // First attempt to create the method signature with the provided selector.
-    [methodName retain];
     selector = NSSelectorFromString(methodName);
     
     if(targetIsClass){
@@ -245,10 +264,9 @@ static PopServer *sharedPopServerInstance = nil;
         signature = [object methodSignatureForSelector:selector];
     }
     if (!signature) {
-        NSLog(@"NSObject: Method signature could not be created.");
+        NSLog(@"%@: Method signature could not be created for name %@.", object, methodName);
         return FALSE;
     }
-    [signature retain];
     
 #if SHOW_DEBUG_INFO
     NSLog(@"Args: %@", arguments);
@@ -311,7 +329,10 @@ static PopServer *sharedPopServerInstance = nil;
 #endif
     
     // Handle the commands
-    if([signal isEqualToString:@"#"] || [commandString hasPrefix:@">"] || [commandString hasPrefix:@"//"]){ // comments
+    if([signal hasPrefix:@"@\""]){ // newly created strings
+        NSString *objectIdentifier = [commandParts objectAtIndex:1];
+        [self setObject:[self transformString:signal] inPoolWithIdentifier:objectIdentifier];
+    } else if([signal isEqualToString:@"#"] || [commandString hasPrefix:@">"] || [commandString hasPrefix:@"//"]){ // comments
         say(@"%@\n", commandString);
     } else if([signal isEqualToString:@"new"] || [signal isEqualToString:@"alloc"]){ // object creation
         id object;
@@ -367,13 +388,13 @@ static PopServer *sharedPopServerInstance = nil;
         NSLog(format, object);
     } else if([signal isEqualToString:@"echo"]){ // printf
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:1]];
-        NSLog(@"%@", object);
+        NSLog(@"echo: %@", object);
     } else if([signal isEqualToString:@"get"]){ // get
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:1]];
         NSString *returnCommand = [NSString stringWithFormat:@"%@", object];
         [self sendObject:returnCommand];
     } else if([signal isEqualToString:@"set"]){ // set
-        NSString *objectIdentifier = [[commandParts objectAtIndex:1] retain];
+        NSString *objectIdentifier = [commandParts objectAtIndex:1];
         NSObject *newValue = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
         [self setObject:newValue inPoolWithIdentifier:objectIdentifier];
     } else if([signal isEqualToString:@"breakpoint"]){ // breakpoint
@@ -423,8 +444,8 @@ static PopServer *sharedPopServerInstance = nil;
         return FALSE;
     }
 
-    NSString *objectIdentifier =    [[commandParts objectAtIndex:0] retain];
-    NSString *objectMethod =        [[commandParts objectAtIndex:1] retain];
+    NSString *objectIdentifier =    [commandParts objectAtIndex:0];
+    NSString *objectMethod =        [commandParts objectAtIndex:1];
     NSArray * arguments =           [self commandPartsToArguments:commandParts];
     
     targetIsClass = FALSE;
@@ -436,7 +457,7 @@ static PopServer *sharedPopServerInstance = nil;
 #endif
     } else if(!(object = [self findObjectWithIdentifier:objectIdentifier])){
 #if SHOW_DEBUG_INFO
-        NSLog(@"No object");
+        NSLog(@"No object for identifier %@", objectIdentifier);
 #endif
     }
     
@@ -558,7 +579,7 @@ static PopServer *sharedPopServerInstance = nil;
     
     qoqUnknownSenderArgument = @"(unknownSender)";
     
-    commandDelimiter = [[NSCharacterSet characterSetWithCharactersInString:@";\n\r"] retain];
+    commandDelimiter = [NSCharacterSet characterSetWithCharactersInString:@";\n\r"];
     commandQueue = @"";
     
     // Change to interactive mode if configured
