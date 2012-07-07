@@ -21,10 +21,10 @@ class StandardController extends AbstractActionController {
 		// new NSWindow myWin 1;
 		// myWin initWithContentRect:styleMask:backing:defer: @NSMakeRect(0,0,200,200) (uint)13 (uint)2 (int)1;
 		
-		$window = Runtime::makeInstance('NSWindow', TRUE);
+		$window = Runtime::makeInstance('NSWindow');
 		$window->initWithContentRect_styleMask_backing_defer('@NSMakeRect(0,200,800,600)', uint(13), uint(2), (int)1);
         
-		$webView = Runtime::makeInstance('WebView', TRUE);
+		$webView = Runtime::makeInstance('WebView');
 		$webView->initWithFrame_frameName_groupName('@NSMakeRect(0,200,800,600)', '@MainFrame', '@MainScope');
                 
 		$window->getContentView()->addSubview($webView);

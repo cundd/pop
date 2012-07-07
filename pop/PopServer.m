@@ -336,16 +336,26 @@ static PopServer *sharedPopServerInstance = nil;
         say(@"%@\n", commandString);
     } else if([signal isEqualToString:@"new"] || [signal isEqualToString:@"alloc"]){ // object creation
         id object;
-        BOOL init = TRUE;
+        BOOL init = FALSE;
         NSString *newIdentifier;
         NSString *newClassName = [commandParts objectAtIndex:1];
         
         // Check if a third argument is given
         if([commandParts count] > 3){
-            if([[commandParts objectAtIndex:3] isEqualToString:@"noInit"] || 
+            if([[commandParts objectAtIndex:3] isEqualToString:@"init"] || 
                [[commandParts objectAtIndex:3] isEqualToString:@"true"] || 
                [[commandParts objectAtIndex:3] isEqualToString:@"TRUE"] || 
                [[commandParts objectAtIndex:3] isEqualToString:@"1"]){
+                
+#if SHOW_DEBUG_INFO
+                NSLog(@"Call init");
+#endif
+                init = TRUE;
+            } else 
+            if([[commandParts objectAtIndex:3] isEqualToString:@"noInit"] || 
+               [[commandParts objectAtIndex:3] isEqualToString:@"false"] || 
+               [[commandParts objectAtIndex:3] isEqualToString:@"FALSE"] || 
+               [[commandParts objectAtIndex:3] isEqualToString:@"0"]){
                 
 #if SHOW_DEBUG_INFO
                 NSLog(@"Don't init");
