@@ -616,12 +616,9 @@ static PopServer *sharedPopServerInstance = nil;
     NSProcessInfo * processInfo = [NSProcessInfo processInfo];
     NSArray *processArgumentArray = [processInfo arguments];
     NSString *processArgument;
-    
-    NSLog(@"pro %u", [processArgumentArray count]);
     for (i = 0; i < processArgumentArray.count; i++) {
         processArgument = [processArgumentArray objectAtIndex:i];
-        NSLog(@"%@",processArgument);
-        if([self allowFileInput] && [processArgument isEqualToString:@"-f"]){
+        if([self allowFileInput] && [processArgument isEqualToString:@"-f"] && processArgumentArray.count > i){
             taskScriptPath = [processArgumentArray objectAtIndex:i+1];
         } else if([self allowInteractive] && [processArgument isEqualToString:@"-a"]){
             mode = CDPopModeInteractive;

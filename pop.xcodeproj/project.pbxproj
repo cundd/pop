@@ -10,6 +10,7 @@
 		6504E47B1571791000243F49 /* qoq in Resources */ = {isa = PBXBuildFile; fileRef = 6504E47A1571791000243F49 /* qoq */; };
 		6517B40E15B1A52F00C97411 /* CDApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 6517B40D15B1A52F00C97411 /* CDApplication.m */; };
 		6517B41115B1A73E00C97411 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6517B40F15B1A73E00C97411 /* MainMenu.xib */; };
+		6517B41315B1C35700C97411 /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 6517B41215B1C35700C97411 /* Icon.icns */; };
 		6557EEF7155181A800830335 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6557EEF6155181A800830335 /* Cocoa.framework */; };
 		6557EF01155181A800830335 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6557EEFF155181A800830335 /* InfoPlist.strings */; };
 		6557EF03155181A800830335 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF02155181A800830335 /* main.m */; };
@@ -57,6 +58,7 @@
 		6517B40C15B1A52F00C97411 /* CDApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDApplication.h; sourceTree = "<group>"; };
 		6517B40D15B1A52F00C97411 /* CDApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDApplication.m; sourceTree = "<group>"; };
 		6517B41015B1A73E00C97411 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		6517B41215B1C35700C97411 /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Icon.icns; sourceTree = "<group>"; };
 		6557EEF2155181A800830335 /* pop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6557EEF6155181A800830335 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		6557EEF9155181A800830335 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -167,6 +169,7 @@
 		6557EEFD155181A800830335 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				6517B41215B1C35700C97411 /* Icon.icns */,
 				6557EF05155181A800830335 /* Credits.rtf */,
 				6557EEFF155181A800830335 /* InfoPlist.strings */,
 				65E359601564302E007BD73C /* LICENSE */,
@@ -312,6 +315,7 @@
 				6504E47B1571791000243F49 /* qoq in Resources */,
 				658A04F8157A3B300079D84F /* README.md in Resources */,
 				6517B41115B1A73E00C97411 /* MainMenu.xib in Resources */,
+				6517B41315B1C35700C97411 /* Icon.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
