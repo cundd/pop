@@ -13,7 +13,7 @@
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation
 {
-    self.value;
+    [self value];
 }
 
 @end

@@ -5,7 +5,8 @@ namespace Qoq;
  * @license
  */
 
-require_once(__DIR__ . '/Functions.php'); 
+require_once(__DIR__ . '/Functions.php');
+require_once(__DIR__ . '/ProxyObject.php');
 
 use \Qoq\Nil as Nil;
 use \Qoq\ProxyObject as ProxyObject;
@@ -180,11 +181,19 @@ class QoqRuntime {
 	 * @param string $class The class name including the namespace
 	 * @return boolean  Returns TRUE if the class file could be loaded, otherwise FALSE
 	 */
-	static public function loadClassFile($class) {
+	static public function loadClassFile($class, $allowAlias = TRUE) {
 		$controllerClassPath = str_replace('\\', '/', $class);
 		$firstSlashPosition = strpos($controllerClassPath, '/');
+        
+        // If the class name doesn't contain a backslash try to create a Cocoa instance
 		if ($firstSlashPosition === FALSE) {
-			return FALSE;
+            if ($allowAlias) {
+				eval("class $class extends \\Qoq\\ProxyObject {}");
+                // class_alias('\Qoq\ProxyObject', $class);
+                return TRUE;
+            } else {
+                return FALSE;
+            }
 		}
 		$package = substr($controllerClassPath, 0, $firstSlashPosition);
 		$relativeClassPathFromPackage = substr($controllerClassPath, $firstSlashPosition);
@@ -193,9 +202,10 @@ class QoqRuntime {
 		
 		if (file_exists($absoluteClassPathApplicationDirectory)) {
 			require_once($absoluteClassPathApplicationDirectory);
-		} else {
+		} else if (file_exists($absoluteClassPathFrameworkDirectory)) {
 			require_once($absoluteClassPathFrameworkDirectory);
 		}
+        return class_exists($class, FALSE);
 	}
 	
 	/**
@@ -212,7 +222,7 @@ class QoqRuntime {
 	 */
 	static public function makeInstance($class, $arguments = array()) {
 		 // Try to load the class file
-		if (self::loadClassFile($class)) {
+		if (self::loadClassFile($class, FALSE)) {
 			if (func_num_args() > 0) {
 				return new $class($arguments);
 			} else {
@@ -222,14 +232,6 @@ class QoqRuntime {
 		// If the class name doesn't contain a backslash try to create a Cocoa instance
 		if (strpos($class, '\\') === FALSE) {
 			$proxyObject = new ProxyObject($class);
-			$identifier = $proxyObject->getUuid();
-			
-			if (!is_array($arguments)) {
-				$arguments = array($arguments);
-			}
-			self::sendCommand('new ' . $class . ' ' . $identifier . ' ' . implode(' ', $arguments));
-			$popData = self::getValueForKey($identifier);
-			$proxyObject->setData($popData);
 			return $proxyObject;
 		}
 		return NULL;
@@ -254,7 +256,6 @@ class QoqRuntime {
 	
 	
 	
-	
 	/* MWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
 	/* COMMUNICATION WITH POP      MWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
 	/* MWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
@@ -262,13 +263,14 @@ class QoqRuntime {
 	 * Queries the POP server for the value for the given identifier.
 	 * 
 	 * @param string $identifier The identifier of the value to get
+	 * @param boolean $dontCreateProxy Define if a proxy object should be created, if the result indicates an Objective-C object
 	 * @return object  The value for the identifier
 	 */
-	static public function getValueForKeyPath($identifier) {
+	static public function getValueForKeyPath($identifier, $dontCreateProxy = FALSE) {
 		$command = "get $identifier";
 		self::sendCommand($command);
 		$value = self::sharedInstance()->waitForResponse();
-        if (substr($value, 0, 1) === '<' && strpos($value, ': 0x') !== FALSE) {
+        if ($dontCreateProxy === FALSE && substr($value, 0, 1) === '<' && strpos($value, ': 0x') !== FALSE) {
             $value = self::makeInstanceFromPopReturn($value, $identifier);
         }
         return $value;
@@ -512,7 +514,8 @@ class QoqRuntime {
 		}
 		
         $i--;
-		$file = @$backtrace[$i]['file'];
+		$file = realpath(@$backtrace[$i]['file']);
+		$file = substr($file, strlen(self::getBasePath()));
 		self::sendCommand('# ' . $file . ' @ ' . @$backtrace[$i]['line']);
 		
 		
@@ -524,6 +527,15 @@ class QoqRuntime {
 	static public function predump() {
 		$args = func_get_args();
 		return call_user_func_array(array(self, 'pd'), $args);
+	}
+	
+	/**
+	 * Returns the path of the installation.
+	 * 
+	 * @return string
+	 */
+	static public function getBasePath() {
+		return realpath(__DIR__ . '/../../../../');
 	}
 	
 	/**

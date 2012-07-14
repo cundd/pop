@@ -28,10 +28,7 @@
 
 @implementation CDAppDelegate
 
-@synthesize textfield, secondWindow;
-@synthesize window = _window;
-
-- (void)applicationWillTerminate:(NSNotification *)notification{
+-(void)applicationWillTerminate:(NSNotification *)notification{
 }
 
 -(void)handleNSBundle:(NSNotification*)notif{
@@ -47,12 +44,20 @@
     }
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+-(void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     [self addPlugin:self selector:@selector(handleNSBundle:) forCommand:@"NSBundle"];
 }
 
-- (IBAction)loadNibAction:(id)sender{
+-(IBAction)loadNibAction:(id)sender{
     NSString *command = @"loadNibAction:";
     [self sendCommand:command sender:sender];
+}
+
+- (BOOL)allowFileInput{
+    return TRUE;
+}
+
+- (BOOL)allowInteractive{
+    return TRUE;
 }
 @end

@@ -44,13 +44,51 @@ class ProxyObject {
 	/**
 	 * Returns a new proxy object for a object of the POP server.
 	 * 
-	 * @param string $className The name of the represented class.
+	 * @param string|array $className The name of the represented class, or an array of arguments
 	 * @return object
 	 */
-	public function __construct($className) {
+	public function __construct($className = '') {
+		$arguments = func_get_args();
+		
+		/*
+		 * If the class name of this is the Proxy Object, the first argument has
+		 * to be the Objective-C class name.
+		 */
+		$className = get_class($this);
+		if ($className === __CLASS__) {
+			$className = array_shift($arguments);
+		}
 		$this->_className = $className;
 		$this->_uuid = 'inst-' . $className . '-' . time();
+		
+		if (!in_array('>dontSend', $arguments)) {
+			$this->createObjectInPop($arguments);
+		}
+		
 		return $this;
+	}
+	
+	/**
+	 * Creates the object in the POP server space.
+	 *
+	 * @param array<string>	$arguments The arguments
+	 * @return void
+	 */
+	protected function createObjectInPop($arguments) {
+		$popData = NULL;
+		$identifier = $this->getUuid();
+		Runtime::sendCommand('new ' . $this->_className . ' ' . $identifier . ' ' . implode(' ', $arguments));
+		
+		/*
+		 * Some Objective-C objects (i.e. NSURL) can not be retrieved until they
+		 * are initialized.
+		 * If you want the data to be fetched automatically, you can pass
+		 * ">retrievePopData" as one of the arguments.
+		 */
+		if (in_array('>retrievePopData', $arguments)) {
+			$popData = Runtime::getValueForKeyPath($identifier, TRUE);
+			$this->setData($popData);
+		}
 	}
 	
 	/**
@@ -112,6 +150,20 @@ class ProxyObject {
 	}
 	
 	/**
+	 * Returns the data received from POP.
+	 *
+	 * @param mixed
+	 * @return void
+	 */
+	public function getData() {
+		if (!$this->_data) {
+			$popData = Runtime::getValueForKeyPath($identifier, TRUE);
+			$this->setData($popData);
+		}
+		return $this->_data;
+	}
+	
+	/**
 	 * Set the data received from POP.
 	 *
 	 * @param mixed
@@ -153,6 +205,24 @@ class ProxyObject {
 		
 		$command = Runtime::convertMethodNameToCommand($this, $name, $arguments);
 		return Runtime::sendCommand($command);
+	}
+	
+	/**
+	 * Tries to dynamically resolve methods.
+	 *
+	 * If the method name starts with 'set' setValueForKey() will be called.
+	 * If the method name starts with 'get' getValueForKey() will be called.
+	 * All other method names will be parsed with convertMethodNameToCommand().
+	 * 
+	 * @param string $name The name of the method
+	 * @param array $arguments Arguments sent to the method
+	 * @return mixed
+	 */
+	static public function __callStatic($name, $arguments) {
+		$className = get_called_class();
+		$command = Runtime::convertMethodNameToCommand($className, $name, $arguments);
+		Runtime::sendCommand($command);
+		return Runtime::getValueForKeyPath('classObj-' . $className . '-' . $name);
 	}
 }
 

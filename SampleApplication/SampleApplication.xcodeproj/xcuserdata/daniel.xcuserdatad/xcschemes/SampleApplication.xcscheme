@@ -4,15 +4,6 @@
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
-      <PostActions>
-         <ExecutionAction
-            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
-            <ActionContent
-               title = "Run Script"
-               scriptText = "if [ type appledoc 2&gt;/dev/null ]; then &#10;    appledoc --project-name POP --project-company &quot;Cundd&quot; --company-id net.cundd -o ../doc ./&#10;fi">
-            </ActionContent>
-         </ExecutionAction>
-      </PostActions>
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
@@ -22,10 +13,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "6557EEF1155181A800830335"
-               BuildableName = "pop.app"
-               BlueprintName = "pop"
-               ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
+               BlueprintIdentifier = "657557AB1595C5BB00B1FCEF"
+               BuildableName = "SampleApplication.app"
+               BlueprintName = "SampleApplication"
+               ReferencedContainer = "container:SampleApplication.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -40,20 +31,20 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "6557EF12155181A900830335"
-               BuildableName = "popTests.octest"
-               BlueprintName = "popTests"
-               ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
+               BlueprintIdentifier = "657557CC1595C5BC00B1FCEF"
+               BuildableName = "SampleApplicationTests.octest"
+               BlueprintName = "SampleApplicationTests"
+               ReferencedContainer = "container:SampleApplication.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "6557EEF1155181A800830335"
-            BuildableName = "pop.app"
-            BlueprintName = "pop"
-            ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
+            BlueprintIdentifier = "657557AB1595C5BB00B1FCEF"
+            BuildableName = "SampleApplication.app"
+            BlueprintName = "SampleApplication"
+            ReferencedContainer = "container:SampleApplication.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -69,18 +60,12 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "6557EEF1155181A800830335"
-            BuildableName = "pop.app"
-            BlueprintName = "pop"
-            ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
+            BlueprintIdentifier = "657557AB1595C5BB00B1FCEF"
+            BuildableName = "SampleApplication.app"
+            BlueprintName = "SampleApplication"
+            ReferencedContainer = "container:SampleApplication.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "NSZombieEnabled"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -93,10 +78,10 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "6557EEF1155181A800830335"
-            BuildableName = "pop.app"
-            BlueprintName = "pop"
-            ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
+            BlueprintIdentifier = "657557AB1595C5BB00B1FCEF"
+            BuildableName = "SampleApplication.app"
+            BlueprintName = "SampleApplication"
+            ReferencedContainer = "container:SampleApplication.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

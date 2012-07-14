@@ -25,6 +25,7 @@
 //    DEALINGS IN THE SOFTWARE.
 
 #import "PopServer.h"
+#include <objc/objc-load.h>
 
 
 #pragma mark Constants
@@ -252,14 +253,7 @@ static PopServer *sharedPopServerInstance = nil;
     selector = NSSelectorFromString(methodName);
     
     if(targetIsClass){
-#if !DEBUG
-        // If debug mode is not enabled skip the rest
-        NSLog(@"The target is a class, this is not supported");
         return FALSE;
-#endif
-        Class targetClass = NSClassFromString((NSString *)object);
-        signature = [targetClass instanceMethodSignatureForSelector:selector];
-        NSLog(@"Target is class %@ %@ %@ %s", object, targetClass, signature, (char *)selector);
     } else {
         signature = [object methodSignatureForSelector:selector];
     }
@@ -316,6 +310,48 @@ static PopServer *sharedPopServerInstance = nil;
     NSLog(@"After invoke: Target %@ with signature %@ (SEL: %s)", [[invocation target] class], [invocation methodSignature], (char *)selector);
 #endif
     return success;
+}
+
+- (BOOL)invokeClassMethodWithName:(NSString *)className selector:(SEL)aSelector withArguments:(NSArray *)arguments{
+    id result;
+    Class aClass;
+    Method theMethod;
+    IMP methodImplementation;
+    NSString * identifier;
+    
+    aClass = NSClassFromString(className);
+    theMethod = class_getClassMethod(aClass, aSelector);
+    methodImplementation = method_getImplementation(theMethod);
+    
+    if (!methodImplementation) {
+        return FALSE;
+    }
+    
+    switch (arguments.count) {
+        case 1:
+            result = methodImplementation(aClass, aSelector, [arguments objectAtIndex:0]);
+            break;
+            
+        case 2:
+            result = methodImplementation(aClass, aSelector, [arguments objectAtIndex:0], [arguments objectAtIndex:1]);
+            break;
+            
+        case 3:
+            result = methodImplementation(aClass, aSelector, [arguments objectAtIndex:0], [arguments objectAtIndex:1], [arguments objectAtIndex:2]);
+            break;
+            
+        case 0:
+        default:
+            result = methodImplementation(aClass, aSelector);
+            break;
+    }
+    NSLog(@"Result: %@", result);
+    
+    identifier = [NSString stringWithFormat:@"classObj-%@-%s", className, aSelector];
+    if (result) {
+        [self setObject:result inPoolWithIdentifier:identifier];
+    }
+    return TRUE;
 }
 
 
@@ -380,6 +416,7 @@ static PopServer *sharedPopServerInstance = nil;
         NSLog(@"New class: '%@'", newClassName);
 #endif
         if(init){
+            NSLog(@"Init");
             object = [[NSClassFromString(newClassName) alloc] init];
         } else {
             object = [NSClassFromString(newClassName) alloc];
@@ -390,7 +427,8 @@ static PopServer *sharedPopServerInstance = nil;
             NSLog(@"Couldn't create object ob class %@", newClassName);
         }
 #if SHOW_DEBUG_INFO
-        NSLog(@"Object: %@", object);
+        NSLog(@"Class: %@", NSClassFromString(newClassName));
+        //NSLog(@"Object: %@", object);
 #endif
     } else if([signal isEqualToString:@"printf"]){ // echo
         NSString *format = [commandParts objectAtIndex:1];
@@ -479,6 +517,10 @@ static PopServer *sharedPopServerInstance = nil;
     } else if([self invokeMethodWithName:objectMethod onObject:object withArguments:arguments]){
 #if SHOW_DEBUG_INFO
         NSLog(@"Did perform selector (with args) %@", objectMethod);
+#endif
+    } else if([self invokeClassMethodWithName:(NSString *)object selector:NSSelectorFromString(objectMethod) withArguments:arguments]){
+#if SHOW_DEBUG_INFO
+        NSLog(@"Did perform class method (without args) %@", objectMethod);
 #endif
     } else {
 #if SHOW_DEBUG_INFO
@@ -570,10 +612,18 @@ static PopServer *sharedPopServerInstance = nil;
 
 #pragma mark Task management
 - (void)startTask{
+    NSUInteger i = 0;
     NSProcessInfo * processInfo = [NSProcessInfo processInfo];
-    NSArray *args = [processInfo arguments];
-    for(NSString *processArgument in args){
-        if([processArgument isEqualToString:@"-a"]){
+    NSArray *processArgumentArray = [processInfo arguments];
+    NSString *processArgument;
+    
+    NSLog(@"pro %u", [processArgumentArray count]);
+    for (i = 0; i < processArgumentArray.count; i++) {
+        processArgument = [processArgumentArray objectAtIndex:i];
+        NSLog(@"%@",processArgument);
+        if([self allowFileInput] && [processArgument isEqualToString:@"-f"]){
+            taskScriptPath = [processArgumentArray objectAtIndex:i+1];
+        } else if([self allowInteractive] && [processArgument isEqualToString:@"-a"]){
             mode = CDPopModeInteractive;
         }
     }
@@ -782,11 +832,12 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     
     fgets(buffer, 8192, stdin);
     commandString = [self cleanupString:[NSString stringWithCString:buffer encoding:NSUTF8StringEncoding]];
+    commandString = [commandString stringByTrimmingCharactersInSet:newlineCharacterSet];
     
     if(commandString.length == 0){
         // Do nothing
     } else if([commandString isEqualToString:@"help"]){
-        say(@"POP Help:\n Creating:    'new NSWindow variableName [noInit]'   Creates a new object (Set 'noInit' if you only wont to alloc)\n Execution:   'exec variableName method' or 'exec variableName method arg0 ... argN'    Executes the method on the object\n printf:      'printf format variableName'           Prints a formatted string [ = printf(format, variableName) ]\n echo:        'echo variableName'                    Logs the value from variableName [ = NSLog ]\n get:         'get variableName'                     Currently the same as \"echo\"\n set:         'set variableName newValue'            Sets the newValue for the variableName\n");     
+        say(@"POP Help:\n Creating:    'new NSWindow variableName [init]'     Creates a new object (Set 'init' if you want to invoke init)\n Execution:   'exec variableName method' or 'exec variableName method arg0 ... argN'    Executes the method on the object\n printf:      'printf format variableName'           Prints a formatted string [ = printf(format, variableName) ]\n echo:        'echo variableName'                    Logs the value from variableName [ = NSLog ]\n get:         'get variableName'                     Currently the same as \"echo\"\n set:         'set variableName newValue'            Sets the newValue for the variableName\n");     
     } else if([commandString isEqualToString:@"copyright"]){
         say(@"(c) 2012 Corn Daniel\n");
     } else if([commandString isEqualToString:@"license"]){
@@ -833,6 +884,14 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         taskArguments = [NSMutableArray arrayWithObjects:@"php", self.taskScriptPath, nil];
     }
     return taskArguments;
+}
+
+- (BOOL)allowFileInput{
+    return FALSE;
+}
+
+- (BOOL)allowInteractive{
+    return FALSE;
 }
 
 -(id)init{
