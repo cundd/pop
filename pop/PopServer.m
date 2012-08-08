@@ -37,18 +37,32 @@ NSString * const PopNotificationNameUnfoundCommandPrefix = @"PopNotificationUnfo
 void say(NSString *format, ...){
     va_list      listOfArguments;
     NSString    *formattedString;
+    CDPopMode    mode;
+    
+    // Get the mode
+    mode = [(PopServer *)[PopServer sharedInstance] mode];
 
+    // Get all arguments
     va_start(listOfArguments, format);
     formattedString = [[NSString alloc] initWithFormat:format
                                              arguments:listOfArguments];
     va_end(listOfArguments);
     
-    if([(PopServer *)[PopServer sharedInstance] mode] == CDPopModeInteractive){
+#if USE_NCURSES
+    start_color();
+	init_pair(1, COLOR_CYAN, COLOR_BLACK);
+    
+	attron(COLOR_PAIR(1));
+	wprintw([[PopServer sharedInstance] getNCWindow], [formattedString UTF8String]);
+	attroff(COLOR_PAIR(1));
+#else
+    if(mode == CDPopModeInteractive){
         // Color the output in Cyan
         printf("\033[36m%s\033[0m", [formattedString UTF8String]);
     } else {
         printf("%s", [formattedString UTF8String]);
     }
+#endif
 }
 
 
@@ -106,6 +120,9 @@ static PopServer *sharedPopServerInstance = nil;
     } else if([argument hasPrefix:@"(uinteger)"]){
         NSUInteger value = [[argument substringFromIndex:10] intValue];
         [invocation setArgument:&value atIndex:index];
+    } else if([argument hasPrefix:@"(bool)"]){
+        BOOL value = [[argument substringFromIndex:6] boolValue];
+        [invocation setArgument:&value atIndex:index];
     }
 }
 
@@ -125,16 +142,24 @@ static PopServer *sharedPopServerInstance = nil;
                                  [[rectPoints objectAtIndex:3] floatValue]
                                  );
         [invocation setArgument:&rect atIndex:index];
+    } else if([argument hasPrefix:@"@NSMakeSize("]){
+        NSUInteger length = [argument length] - 12 - 1;
+        argument = [[argument substringWithRange:NSMakeRange(12, length)] stringByReplacingOccurrencesOfString:@" " withString:@""];
+        NSArray *points = [argument componentsSeparatedByString:@","];
+        NSSize size = NSMakeSize(
+                                    [[points objectAtIndex:0] floatValue],
+                                    [[points objectAtIndex:1] floatValue]
+                                    );
+        [invocation setArgument:&size atIndex:index];
     } else if([argument hasPrefix:@"@NSMakePoint("]){
         NSUInteger length = [argument length] - 13 - 1;
-        argument = [[argument substringWithRange:NSMakeRange(12, length)] stringByReplacingOccurrencesOfString:@" " withString:@""];
+        argument = [[argument substringWithRange:NSMakeRange(13, length)] stringByReplacingOccurrencesOfString:@" " withString:@""];
         NSArray *points = [argument componentsSeparatedByString:@","];
         NSPoint point = NSMakePoint(
                                  [[points objectAtIndex:0] floatValue], 
                                  [[points objectAtIndex:1] floatValue]
                                  );
         [invocation setArgument:&point atIndex:index];
-
     } else if([argument hasPrefix:@"@\""] || [argument hasPrefix:@"@'"]){
         NSUInteger length = [argument length] - 2 - 1;
         argument = [argument substringWithRange:NSMakeRange(2, length)];
@@ -171,14 +196,16 @@ static PopServer *sharedPopServerInstance = nil;
 }
 
 - (id)findObjectInPoolWithIdentifier:(NSString *)identifier{
-#if SHOW_DEBUG_INFO
-    NSLog(@"Identifier: %@ Pool: %@", identifier, objectPool);
+#if SHOW_DEBUG_INFO > 1
+//    NSLog(@"Identifier: %@ Pool: %@", identifier, objectPool);
 #endif
     return [objectPool objectForKey:identifier];
 }
 
 - (void)setObject:(id)object inPoolWithIdentifier:(NSString *)identifier{
-    [objectPool setObject:object forKey:identifier];
+    if (object) {
+        [objectPool setObject:object forKey:identifier];
+    }
 }
 
 - (void)updateObject:(id)object forIdentifier:(NSString *)identifier{
@@ -258,11 +285,11 @@ static PopServer *sharedPopServerInstance = nil;
         signature = [object methodSignatureForSelector:selector];
     }
     if (!signature) {
-        NSLog(@"%@: Method signature could not be created for name %@.", object, methodName);
+        say(@"%@: Method signature could not be created for name %@.\n", object, methodName);
         return FALSE;
     }
     
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
     NSLog(@"Args: %@", arguments);
 #endif
     
@@ -293,20 +320,20 @@ static PopServer *sharedPopServerInstance = nil;
             [invocation setArgument:&argument atIndex:argumentIndex];
         }
     }
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
     NSLog(@"Before invoke: Target %@ with signature %@ (SEL: %s)", [[invocation target] class], [invocation methodSignature], (char *)selector);
 #endif
     
-    @try{
+    @try {
         [invocation invoke];
-    }@catch(NSException *e){
+    } @catch(NSException *e) {
         success = FALSE;
         NSLog(@"Exception: %@",e);
         if(![object respondsToSelector:NSSelectorFromString(methodName)]){
             NSLog(@"Target doesn't respond to %@", methodName);
         }
     }
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
     NSLog(@"After invoke: Target %@ with signature %@ (SEL: %s)", [[invocation target] class], [invocation methodSignature], (char *)selector);
 #endif
     return success;
@@ -318,7 +345,10 @@ static PopServer *sharedPopServerInstance = nil;
     Method theMethod;
     IMP methodImplementation;
     NSString * identifier;
-    
+
+    if (![className isKindOfClass:[NSString class]]) {
+        className = NSStringFromClass([className class]);
+    }
     aClass = NSClassFromString(className);
     theMethod = class_getClassMethod(aClass, aSelector);
     methodImplementation = method_getImplementation(theMethod);
@@ -345,9 +375,18 @@ static PopServer *sharedPopServerInstance = nil;
             result = methodImplementation(aClass, aSelector);
             break;
     }
-    NSLog(@"Result: %@", result);
     
-    identifier = [NSString stringWithFormat:@"classObj-%@-%s", className, aSelector];
+    // Handle if the result is TRUE
+    if (!result) {
+        [self sendObject:@"(bool)0"];
+    } else if ((int)result == 0x0000000000000001) {
+        [self sendObject:@"(bool)1"];
+        NSLog(@"Result: TRUE");
+        return TRUE;
+    }
+    
+    NSLog(@"Result: %@", result);
+    identifier = [NSString stringWithFormat:@"classObj-%@-%s", className, (char *)aSelector];
     if (result) {
         [self setObject:result inPoolWithIdentifier:identifier];
     }
@@ -360,8 +399,8 @@ static PopServer *sharedPopServerInstance = nil;
     NSArray *commandParts = [commandString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSString *signal = [commandParts objectAtIndex:0];
     
-#if SHOW_DEBUG_INFO
-    NSLog(@"Parsing command string '%@'", commandString);
+#if SHOW_DEBUG_INFO > 0
+    NSLog(@"CMD: %@", commandString);
 #endif
     
     // Handle the commands
@@ -369,7 +408,9 @@ static PopServer *sharedPopServerInstance = nil;
         NSString *objectIdentifier = [commandParts objectAtIndex:1];
         [self setObject:[self transformString:signal] inPoolWithIdentifier:objectIdentifier];
     } else if([signal isEqualToString:@"#"] || [commandString hasPrefix:@">"] || [commandString hasPrefix:@"//"]){ // comments
-        say(@"%@\n", commandString);
+        if (SHOW_DEBUG_INFO == 0) { // If the command wasn't already printed
+            say(@"%@\n", commandString);
+        }
     } else if([signal isEqualToString:@"new"] || [signal isEqualToString:@"alloc"]){ // object creation
         id object;
         BOOL init = FALSE;
@@ -383,7 +424,7 @@ static PopServer *sharedPopServerInstance = nil;
                [[commandParts objectAtIndex:3] isEqualToString:@"TRUE"] || 
                [[commandParts objectAtIndex:3] isEqualToString:@"1"]){
                 
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
                 NSLog(@"Call init");
 #endif
                 init = TRUE;
@@ -393,7 +434,7 @@ static PopServer *sharedPopServerInstance = nil;
                [[commandParts objectAtIndex:3] isEqualToString:@"FALSE"] || 
                [[commandParts objectAtIndex:3] isEqualToString:@"0"]){
                 
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
                 NSLog(@"Don't init");
 #endif
                 init = FALSE;
@@ -412,7 +453,7 @@ static PopServer *sharedPopServerInstance = nil;
             newIdentifier = newClassName;
         }
         
-#if SHOW_DEBUG_INFO        
+#if SHOW_DEBUG_INFO > 1        
         NSLog(@"New class: '%@'", newClassName);
 #endif
         if(init){
@@ -426,17 +467,17 @@ static PopServer *sharedPopServerInstance = nil;
         } else {
             NSLog(@"Couldn't create object ob class %@", newClassName);
         }
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
         NSLog(@"Class: %@", NSClassFromString(newClassName));
         //NSLog(@"Object: %@", object);
 #endif
     } else if([signal isEqualToString:@"printf"]){ // echo
         NSString *format = [commandParts objectAtIndex:1];
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
-        NSLog(format, object);
+        say(format, object);
     } else if([signal isEqualToString:@"echo"]){ // printf
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:1]];
-        NSLog(@"echo: %@", object);
+        say(@"echo: %@\n", object);
     } else if([signal isEqualToString:@"get"]){ // get
         NSObject *object = [self findObjectWithIdentifier:[commandParts objectAtIndex:1]];
         NSString *returnCommand = [NSString stringWithFormat:@"%@", object];
@@ -445,10 +486,15 @@ static PopServer *sharedPopServerInstance = nil;
         NSString *objectIdentifier = [commandParts objectAtIndex:1];
         NSObject *newValue = [self findObjectWithIdentifier:[commandParts objectAtIndex:2]];
         [self setObject:newValue inPoolWithIdentifier:objectIdentifier];
-    } else if([signal isEqualToString:@"breakpoint"]){ // breakpoint
-        NSString *objectIdentifier = [commandParts objectAtIndex:1];
-        id object = [self findObjectWithIdentifier:objectIdentifier];
-        NSLog(@"objectIdentifier: %@ object: %@",objectIdentifier, object);
+    } else if([signal isEqualToString:@"break"] || [signal isEqualToString:@"breakpoint"]){ // breakpoint
+        NSString *objectIdentifier;
+        id object;
+        if (commandParts.count > 1) {
+            objectIdentifier = [commandParts objectAtIndex:1];
+            object = [self findObjectWithIdentifier:objectIdentifier];
+            NSLog(@"objectIdentifier: %@ object: %@", objectIdentifier, object);
+        }
+        NSLog(@"break");
     } else if([signal isEqualToString:@"throw"]){ // throw
         id object = nil;
         NSString *name = [commandParts objectAtIndex:1];
@@ -484,7 +530,7 @@ static PopServer *sharedPopServerInstance = nil;
 - (BOOL)executeWithCommandParts:(NSArray *)commandParts{
     id object;
 
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
     NSLog(@"Command parts: %@", commandParts);
 #endif
     
@@ -500,30 +546,30 @@ static PopServer *sharedPopServerInstance = nil;
     if([self identifierSignalsClass:objectIdentifier]){
         targetIsClass = TRUE;
         object = objectIdentifier;
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
         NSLog(@"The target is a class (%@)", objectIdentifier);
 #endif
     } else if(!(object = [self findObjectWithIdentifier:objectIdentifier])){
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
         NSLog(@"No object for identifier %@", objectIdentifier);
 #endif
     }
-    
+        
     if(!targetIsClass && [arguments count] == 0){
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
         NSLog(@"Perform selector (without args) %@", objectMethod);
 #endif
         [object performSelector:NSSelectorFromString(objectMethod) withObject:nil afterDelay:0.0];
     } else if([self invokeMethodWithName:objectMethod onObject:object withArguments:arguments]){
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
         NSLog(@"Did perform selector (with args) %@", objectMethod);
 #endif
     } else if([self invokeClassMethodWithName:(NSString *)object selector:NSSelectorFromString(objectMethod) withArguments:arguments]){
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
         NSLog(@"Did perform class method (without args) %@", objectMethod);
 #endif
     } else {
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
         NSLog(@"Object doesn't respond to %@", objectMethod);
 #endif
         return FALSE;
@@ -578,7 +624,7 @@ static PopServer *sharedPopServerInstance = nil;
     identifier = [self identifierForObject:theSender];
     commandString = [NSString stringWithFormat:@"exec %@ %@", identifier, theCommand];
     
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
     NSLog(@"Sending command: '%@'", commandString);
 #endif
     [qoqWriteHandle writeData:[commandString dataUsingEncoding:NSUTF8StringEncoding]];
@@ -603,10 +649,14 @@ static PopServer *sharedPopServerInstance = nil;
     NSString * objectString;
     objectString = [NSString stringWithFormat:@"%@", theObject];
     
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
     NSLog(@"Sending object to QOQ: '%@'", objectString);
 #endif
-    [qoqWriteHandle writeData:[objectString dataUsingEncoding:NSUTF8StringEncoding]];
+    if (mode == CDPopModeInteractive){
+        say(@"get: %@\n", objectString);
+    } else {
+        [qoqWriteHandle writeData:[objectString dataUsingEncoding:NSUTF8StringEncoding]];
+    }
 }
 
 
@@ -639,6 +689,9 @@ static PopServer *sharedPopServerInstance = nil;
     commandDelimiter = [NSCharacterSet characterSetWithCharactersInString:@";\n\r"];
     commandQueue = @"";
     
+    [self initEnvironment];
+
+    
     // Change to interactive mode if configured
     if(mode == CDPopModeInteractive){
         [self runInteractive];
@@ -654,7 +707,10 @@ static PopServer *sharedPopServerInstance = nil;
     // Register for task termination
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:nil];
     
-#if SHOW_DEBUG_INFO
+    // Register for application termination
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(finishInteractive:) name:NSApplicationWillTerminateNotification object:nil];
+    
+#if SHOW_DEBUG_INFO > 1
     NSLog(@"Call script %@ with arguments: %@", self.taskLaunchPath, self.taskArguments);
 #endif
     if(task){
@@ -707,7 +763,7 @@ static PopServer *sharedPopServerInstance = nil;
     
     if([data length]){
         justReceivedCommand = [self cleanupString:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
-        commandQueue = [commandQueue stringByAppendingString:[justReceivedCommand stringByReplacingOccurrencesOfString:@"> " withString:@""]];
+        commandQueue = [commandQueue stringByAppendingString:[justReceivedCommand stringByReplacingOccurrencesOfString:kCDInteractivePrompt withString:@""]];
         
         // Check if there is a delimiter in the command queue
         NSRange commandDelimiterRange = [commandQueue rangeOfCharacterFromSet:commandDelimiter];
@@ -721,12 +777,7 @@ static PopServer *sharedPopServerInstance = nil;
                 }
             }
             commandQueue = @"";
-        } else {
-            // Print the input to show what is typed
-            say(justReceivedCommand);
-            fflush(stdout);
         }
-        
     }
 
     if([task isRunning]){
@@ -737,7 +788,7 @@ static PopServer *sharedPopServerInstance = nil;
 - (void)taskDidTerminate:(NSNotification *)notif{
 	int status = [task terminationStatus];
     
-#if SHOW_DEBUG_INFO
+#if SHOW_DEBUG_INFO > 1
 	if(status == 0){
 		NSLog(@"Task succeeded.");
 	} else {
@@ -791,6 +842,17 @@ static PopServer *sharedPopServerInstance = nil;
     uint64_t timeInterval_gcd;
     timeInterval_gcd = timeInterval * NSEC_PER_SEC;
     
+    // Set the qoqWriteHandle
+    qoqWriteHandle = [NSFileHandle fileHandleWithStandardOutput];
+    
+    // Print the startup info
+    say(@"POP Interactive Console (Version 0.1.0)\n\
+Use \"help\", \"copyright\" or \"license\" for more information.\n");
+#if USE_NCURSES
+    wrefresh([self getNCWindow]);
+#endif
+    
+    // Init the loop
     // Info: http://libdispatch.macosforge.org/trac/wiki/tutorial#Respondingtoevents:Sources
     dispatch_queue_t queue	= dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
@@ -805,18 +867,207 @@ static PopServer *sharedPopServerInstance = nil;
         [self runInteractiveLoop:nil];
     };
     
-    
     dispatch_source_set_event_handler(source, runInteractiveBlock);
     dispatch_resume(source);
-    
-    
-    say(@"POP Interactive Console (Version 0.1.0)\n\
-Use \"help\", \"copyright\" or \"license\" for more information.\n");
     return TRUE;
 }
 
--(void)runInteractiveLoop:(NSTimer *)aTimer{
+
+#if USE_NCURSES
+-(WINDOW *)getNCWindow {
+    return stdscr;
+    int windowWidth, windowHeight;
+    
+    static WINDOW *win;
+    if (!win) {
+        getmaxyx(stdscr, windowHeight, windowWidth);
+        win = newwin(windowHeight, windowWidth, 0, 0);
+        box(win, 0 , 0);
+        wrefresh(win);
+    }
+    return win;
+}
+
+-(NSString *)getInputFromCommandLine {
+    int startX = 2;
+    int character;
+    int windowWidth, windowHeight, lastX, lastY, characterPosition;
+    BOOL breakLoop = FALSE;
+    BOOL noEcho = FALSE;
+    WINDOW * ncWindow;
+    NSMutableString *inputBuffer = [NSMutableString string];
+    NSMutableString *commandString = [NSMutableString string];
+    
+    ncWindow = [self getNCWindow];
+    getmaxyx(ncWindow, windowHeight, windowWidth);
+    wrefresh(ncWindow);
+    
+    while ((character = wgetch(ncWindow)) != ERR) {
+        if (!noEcho) {
+            getyx(ncWindow, lastY, lastX);
+        }
+        noEcho = FALSE;
+        breakLoop = FALSE;
+        characterPosition = lastX - startX;
+        
+        switch (character) {
+            case KEY_DOWN:
+                // printw("Down\n");
+                move(lastY, startX);
+                clrtoeol();
+                wrefresh(ncWindow);
+                commandString = [NSMutableString stringWithString:inputBuffer];
+                mvwprintw(ncWindow, lastY, startX, [inputBuffer UTF8String]);
+                lastX = startX + (int)[commandString length];
+                
+                
+                noEcho = TRUE;
+                break;
+                
+            case KEY_UP:
+                // printw("Up\n");
+                move(lastY, startX);
+                clrtoeol();
+                wrefresh(ncWindow);
+                if (!lastCommand) {
+                    beep();
+                } else {
+                    commandString = [NSMutableString stringWithString:lastCommand];
+                    mvwprintw(ncWindow, lastY, startX, [lastCommand UTF8String]);
+                    lastX = startX + (int)[commandString length];
+                }
+                noEcho = TRUE;
+                break;
+               
+            case 127:
+            case KEY_BACKSPACE:
+                if (characterPosition - 1 >= 0) {
+                    if (inputBuffer.length >= characterPosition) {
+                        [inputBuffer deleteCharactersInRange:NSMakeRange(characterPosition - 1, 1)];
+                    }
+                    [commandString deleteCharactersInRange:NSMakeRange(characterPosition - 1, 1)];
+                    
+                    // Clear the line
+                    move(lastY, startX);
+                    clrtoeol();
+                    wrefresh(ncWindow);
+                    
+                    // Redraw the line
+                    mvwprintw(ncWindow, lastY, startX, [commandString UTF8String]);
+                    
+                    // Move the cursor
+                    if (lastX > startX) {
+                        lastX--;
+                    }
+                    move(lastY, lastX);
+                }
+                noEcho = TRUE;
+                break;
+                
+            case KEY_LEFT: // Left
+                // printw("Left\n");
+                noEcho = TRUE;
+                if (lastX > startX) {
+                    lastX--;
+                }
+                move(lastY, lastX);
+                break;
+                
+            case KEY_RIGHT: // Right
+                // printw("Right\n");
+                noEcho = TRUE;
+                lastX++;
+                move(lastY, lastX);
+                break;
+                
+            case 10:
+            case KEY_ENTER: // Enter
+                mvwprintw(ncWindow, lastY, lastX, "\n");
+                breakLoop = TRUE;
+                break;
+                
+            case 3: // ctrl-.
+                return @"quit";
+                break;
+                
+            default:
+                break;
+        }
+        if (breakLoop) {
+            break;
+        }
+        
+        if (!noEcho) {
+            // Populate the inputBuffer
+            characterPosition = lastX - startX;
+            if ([inputBuffer length] > characterPosition) {
+                [inputBuffer insertString:[NSString stringWithFormat:@"%c", character]
+                                  atIndex:characterPosition];
+            } else {
+                [inputBuffer appendFormat:@"%c", character];
+            }
+            
+            // Populate the commandString
+            if ([commandString length] > characterPosition) {
+                [commandString insertString:[NSString stringWithFormat:@"%c", character]
+                                  atIndex:characterPosition];
+            } else {
+                [commandString appendFormat:@"%c", character];
+            }
+            
+            // Draw the typed character
+            mvwprintw(ncWindow, lastY, lastX, "%c", character);
+            lastX++;
+        }
+        mvwprintw(ncWindow, windowHeight - 1, windowWidth - 4, "%i", character);
+        mvwprintw(ncWindow, 1, windowWidth - 34, "Enter (help) for more information");
+        move(lastY, lastX);
+        wrefresh(ncWindow);
+    }
+    return [NSString stringWithString:commandString];
+}
+
+-(void)finishInteractive {
+    say(@"Finish interactive\n");
+    endwin();
+}
+
+-(void)initEnvironment {
+    initscr();
+    scrollok([self getNCWindow], TRUE);
+    keypad([self getNCWindow], TRUE);
+    noecho();
+    cbreak();
+}
+#else
+-(NSString *)getInputFromCommandLine {
     char buffer[8192];
+    NSString *inputString;
+    static NSCharacterSet *newlineCharacterSet;
+    
+    if(!newlineCharacterSet){
+        newlineCharacterSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+    }
+
+    fgets(buffer, 8192, stdin);
+    
+    inputString = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
+    inputString = [inputString stringByTrimmingCharactersInSet:newlineCharacterSet];
+    return inputString;
+}
+
+-(void)finishInteractive {
+}
+
+-(void)initEnvironment {
+}
+#endif
+
+- (void)finishInteractive:(NSNotification *)aNotification {
+    [self finishInteractive];
+}
+
+-(void)runInteractiveLoop:(NSTimer *)aTimer{
     NSString *commandString;
     NSArray * commandLines;
     static NSCharacterSet *newlineCharacterSet;
@@ -825,32 +1076,41 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         newlineCharacterSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
     }
     
-    say(@"> ");
-    
-    fgets(buffer, 8192, stdin);
-    commandString = [self cleanupString:[NSString stringWithCString:buffer encoding:NSUTF8StringEncoding]];
-    commandString = [commandString stringByTrimmingCharactersInSet:newlineCharacterSet];
-    
+    say(kCDInteractivePrompt);
+    commandString = [self getInputFromCommandLine];
+    commandString = [self cleanupString:commandString];
     if(commandString.length == 0){
         // Do nothing
-    } else if([commandString isEqualToString:@"help"]){
+        return;
+    }
+    
+    if([commandString isEqualToString:@"help"]){
         say(@"POP Help:\n Creating:    'new NSWindow variableName [init]'     Creates a new object (Set 'init' if you want to invoke init)\n Execution:   'exec variableName method' or 'exec variableName method arg0 ... argN'    Executes the method on the object\n printf:      'printf format variableName'           Prints a formatted string [ = printf(format, variableName) ]\n echo:        'echo variableName'                    Logs the value from variableName [ = NSLog ]\n get:         'get variableName'                     Currently the same as \"echo\"\n set:         'set variableName newValue'            Sets the newValue for the variableName\n");     
     } else if([commandString isEqualToString:@"copyright"]){
         say(@"(c) 2012 Corn Daniel\n");
     } else if([commandString isEqualToString:@"license"]){
         say(@"Copyright (c) 2012 Daniel Corn\n\nPermission is hereby granted, free of charge, to any person obtaining a \ncopy of this software and associated documentation files (the \"Software\"), \nto deal in the Software without restriction, including without limitation \nthe rights to use, copy, modify, merge, publish, distribute, sublicense, \nand/or sell copies of the Software, and to permit persons to whom the \nSoftware is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in \nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR \nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, \nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL \nTHE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER \nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING \nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER \nDEALINGS IN THE SOFTWARE.\n");
-    } else if([commandString isEqualToString:@"exit"]){
-        say(@"Goodbye\n");
+    } else if([commandString isEqualToString:@"exit"] || [commandString isEqualToString:@"quit"]){
+        [self finishInteractive];
+        printf("Goodbye\n");
         [[NSApplication sharedApplication] terminate:self];
     } else {
-        commandLines = [commandString componentsSeparatedByCharactersInSet:commandDelimiter];
-        for(NSString * commandLineString in commandLines){
-            commandLineString = [commandLineString stringByTrimmingCharactersInSet:newlineCharacterSet];
-            if([commandLineString length]){
-                [self parseCommandString:commandLineString];
+        @try {
+            commandLines = [commandString componentsSeparatedByCharactersInSet:commandDelimiter];
+            for(NSString * commandLineString in commandLines){
+                commandLineString = [commandLineString stringByTrimmingCharactersInSet:newlineCharacterSet];
+                if([commandLineString length]){
+                    [self parseCommandString:commandLineString];
+                }
             }
+        } @catch(NSException *exception) {
+            say(@"Caught exception %@ Reason: %@", [exception name], [exception reason]);
         }
+
     }
+    
+    // Create a history
+    lastCommand = commandString;
 }
 
 
@@ -902,11 +1162,13 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
 - (void)dealloc{
     [super dealloc];
     [self stopTask];
+    [self finishInteractive];
 }
 
 - (void)finalize{
     [super finalize];
     [self stopTask];
+    [self finishInteractive];
 }
 - (void)stopTask:(NSNotification *)notif{
     [self stopTask];

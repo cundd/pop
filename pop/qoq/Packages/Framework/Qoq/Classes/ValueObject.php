@@ -10,7 +10,7 @@ use \Qoq\Nil as Nil;
 /**
  * An abstract class to represent basic values.
  */
-class ValueObject {
+class ValueObject implements ValueObjectInterface {
    /**
 	* The represented value.
 	* 

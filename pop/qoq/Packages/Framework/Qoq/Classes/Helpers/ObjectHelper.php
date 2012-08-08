@@ -63,9 +63,10 @@ class ObjectHelper {
 	 * 
 	 * @param string $keyPath The key path of the value to get
 	 * @param object $value The new value to set
+	 * @param object $object The object to change
 	 * @return void
 	 */
-	static public function setValueForKeyPathOfObject($keyPath, $value) {
+	static public function setValueForKeyPathOfObject($keyPath, $value, $object) {
 		$lastKeyPathSegment = '';
 		$object = self::getValueForKeyPathOfObject($keyPath, $object, $lastKeyPathSegment);
 		return self::setValueForKeyOfObject($lastKeyPathSegment, $value, $object);
@@ -87,7 +88,7 @@ class ObjectHelper {
 			$object->$accessorMethod($value);
 		} else
 		// Direct access
-		if (property_exists($object, $key)) {
+		if (is_object($object) && property_exists($object, $key)) {
 			$object->$key = $value;
 		} else
 		// Is array or Traversable

@@ -248,7 +248,7 @@ class QoqRuntime {
 		$colonLocation = strpos($value, ':');
 		$class = substr($value, 1, $colonLocation - 1);
 		
-		$proxyObject = new ProxyObject($class);
+		$proxyObject = new ProxyObject($class, '>dontSend');
 		$proxyObject->setUuid($identifier);
 		$proxyObject->setData($value);
 		return $proxyObject;
@@ -270,8 +270,12 @@ class QoqRuntime {
 		$command = "get $identifier";
 		self::sendCommand($command);
 		$value = self::sharedInstance()->waitForResponse();
-        if ($dontCreateProxy === FALSE && substr($value, 0, 1) === '<' && strpos($value, ': 0x') !== FALSE) {
-            $value = self::makeInstanceFromPopReturn($value, $identifier);
+        if ($dontCreateProxy === FALSE) {
+			if (substr($value, 0, 1) === '<' && strpos($value, ': 0x') !== FALSE) {
+				$value = self::makeInstanceFromPopReturn($value, $identifier);
+			} else if (substr($value, 0, 2) === 'NS' && preg_match('!^NS[a-zA-Z]+ColorSpace!', $value)) {
+				$value = self::makeInstanceFromPopReturn('NSColor :' . $value, $identifier);
+			}
         }
         return $value;
 	}
@@ -320,6 +324,13 @@ class QoqRuntime {
 		while (1) {
 			$line = trim(fread($this->pipe, 1024));
 			if ($line) {
+				if ($line === '(null)') {
+					return NULL;
+				} else if ($line === '(bool)true') {
+					return FALSE;
+				} else if ($line === '(bool)true') {
+					return TRUE;
+				}
 				return $line;
 			}
 			usleep(100000);
@@ -348,7 +359,6 @@ class QoqRuntime {
 	public function setPipeName($newName) {
 		$this->pipeName = $newName;
 	}
-	
 	
 	
 	
@@ -536,6 +546,17 @@ class QoqRuntime {
 	 */
 	static public function getBasePath() {
 		return realpath(__DIR__ . '/../../../../');
+	}
+	
+	/**
+	 * Sets a breakpoint.
+	 *
+	 * @param string	$identifier 	An optional identifier of an object to debug
+	 * @return	void
+	 */
+	static public function breakpoint($identifier = '') {
+		self::pd('Breakpoint: ');
+		self::sendCommand('breakpoint ' . $identifier);
 	}
 	
 	/**

@@ -35,10 +35,29 @@
 #define kCDNamedPipe "/tmp/qoq_pipe"
 #endif
 
+#ifndef kCDInteractivePrompt
+#define kCDInteractivePrompt @"> "
+#endif
+
+#ifndef USE_NCURSES
+#define USE_NCURSES 0
+#endif
+
+
+// Print debug information
+// Possible values:
+//  0: Don't print debug information
+//  1: Print only some information
+//  2: Print all debug information
 // WARNING: Some Objective-C objects (i.e. NSURL) must not be print, 
 // before they are initialized.
 #ifndef SHOW_DEBUG_INFO
-#define SHOW_DEBUG_INFO 0
+#define SHOW_DEBUG_INFO 1
+#endif
+
+
+#if USE_NCURSES
+#import <ncurses.h>
 #endif
 
 
@@ -76,6 +95,8 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
     
     NSMutableDictionary *objectPool;
     BOOL targetIsClass;
+    
+    NSString *lastCommand;
 }
 
 
@@ -363,6 +384,39 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
  * @param aTimer The timer firing the method
  */
 - (void)runInteractiveLoop:(NSTimer *)aTimer;
+
+/**
+ * Stop the interactive mode and clean up the shell.
+ */
+- (void)finishInteractive;
+
+/**
+ * Stop the interactive mode and clean up the shell.
+ *
+ * @param aNotification The notification sent when the application will terminate
+ */
+- (void)finishInteractive:(NSNotification *)aNotification;
+
+/**
+ * Returns the input from the command line.
+ *
+ * @return
+ */
+- (NSString *)getInputFromCommandLine;
+
+/**
+ * Used to initialize ncurses, if it is enabled.
+ */
+- (void)initEnvironment;
+
+#if USE_NCURSES
+/**
+ * Returns the main ncurses window.
+ *
+ * @return
+ */
+-(WINDOW *)getNCWindow;
+#endif
 
 
 

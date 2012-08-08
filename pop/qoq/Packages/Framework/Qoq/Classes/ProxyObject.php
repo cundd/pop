@@ -61,7 +61,7 @@ class ProxyObject {
 		$this->_className = $className;
 		$this->_uuid = 'inst-' . $className . '-' . time();
 		
-		if (!in_array('>dontSend', $arguments)) {
+		if (!in_array('>dontSend', $arguments, TRUE)) {
 			$this->createObjectInPop($arguments);
 		}
 		
@@ -131,6 +131,16 @@ class ProxyObject {
 	}
 	
 	/**
+	 * Returns the value for the given key.
+	 * 
+	 * @param	string	$name	The property key
+	 * @return	mixed			The property's value
+	 */
+	public function __get($name) {
+		return $this->getValueForKey($name);
+	}
+	
+	/**
 	 * Sets the new value for the given key path.
 	 * 
 	 * @param string $keyPath The key path of the value to get
@@ -147,6 +157,17 @@ class ProxyObject {
 	 */
 	public function setValueForKey($keyPath, $value) {
 		return $this->setValueForKeyPath($keyPath, $value);
+	}
+	
+	/**
+	 * Sets the value for the given key.
+	 * 
+	 * @param	string	$name	The property key
+	 * @param	mixed	$value	The new value to set
+	 * @return	void
+	 */
+	public function __set($name, $value) {
+		$this->setValueForKey($name, $value);
 	}
 	
 	/**
@@ -167,7 +188,6 @@ class ProxyObject {
 	 * Set the data received from POP.
 	 *
 	 * @param mixed
-	 *
 	 * @return void
 	 */
 	public function setData($value) {
@@ -197,9 +217,10 @@ class ProxyObject {
 	public function __call($name, $arguments) {
 		$prefix = substr($name, 0, 3);
 		$property = lcfirst(substr($name, 3));
-		if ($prefix === 'set') {
-			return $this->setValueForKeyPath($property, $arguments[0]);
-		} else if ($prefix === 'get') {
+		//if ($prefix === 'set') {
+		//	return $this->setValueForKeyPath($property, $arguments[0]);
+		//} else
+		if ($prefix === 'get') {
 			return $this->getValueForKeyPath($property);
 		}
 		
@@ -222,6 +243,10 @@ class ProxyObject {
 		$className = get_called_class();
 		$command = Runtime::convertMethodNameToCommand($className, $name, $arguments);
 		Runtime::sendCommand($command);
+		$response = Runtime::sharedInstance()->waitForResponse();
+		if (trim($response)) {
+			return $response;
+		}
 		return Runtime::getValueForKeyPath('classObj-' . $className . '-' . $name);
 	}
 }
