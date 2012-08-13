@@ -5,11 +5,19 @@ namespace SampleApplication\Controller;
  * @license
  */
 
+use \Qoq;
 use \Qoq\QoqRuntime as Runtime;
 use \Qoq\ProxyObject as ProxyObject;
 use \Qoq\Controller\AbstractActionController;
 
 class StandardController extends AbstractActionController {
+    /**
+     * The button
+     *
+     * @var \NSButton
+     */
+    protected $button = NULL;
+    
 	/**
 	 * Called when the application started.
 	 * 
@@ -25,7 +33,7 @@ class StandardController extends AbstractActionController {
         $window = new \NSWindow();
 		$window->initWithContentRect_styleMask_backing_defer('@NSMakeRect(0,200,800,600)', uint(13), uint(2), (int)1);
         
-        $drawView = new \NSView();
+        $drawView = new \NSView(array('uuid' => 'drawView'));
         $drawView->initWithFrame(new \Qoq\Rect(0, 0, 200, 300));
 		$window->getContentView()->addSubview($drawView);
 		$window->makeKeyAndOrderFront(nil());
@@ -33,7 +41,9 @@ class StandardController extends AbstractActionController {
 		
 		Runtime::pd($drawView->getValueForKey('canDraw'));
 		
-        $drawView->lockFocusIfCanDraw(); // [(NSView *)drawView lockFocus];
+		Runtime::pd('NOR' . Runtime::sendCommand('self no'));
+		Runtime::pd('NUR' . Runtime::sendCommand('self numeric'));
+        Runtime::pd($drawView->lockFocusIfCanDraw()); // [(NSView *)drawView lockFocus];
         
         /*
 		$webView = Runtime::makeInstance('WebView');
@@ -92,9 +102,20 @@ class StandardController extends AbstractActionController {
         \NSColor::grayColor()->set(); 							// [[NSColor grayColor] set];
         $path->stroke(); 										// [path stroke];
 		
-		$drawView->setNeedsDisplay(TRUE);
-		$window->getContentView()->setNeedsDisplay(TRUE);
-		Runtime::breakpoint($path);
+		//$drawView->setNeedsDisplay(TRUE);
+		//$window->getContentView()->setNeedsDisplay(TRUE);
+		//Runtime::breakpoint($path);
+		
+		$frame = new \Qoq\Rect(10, 10, 200, 30); 				// NSRect frame = NSMakeRect(10, 10, 200, 100);
+		$this->button = new \NSButton(); 								// NSButton *button = [NSButton alloc];
+		$this->button->initWithFrame($frame);							// [button initWithFrame:frame];
+		$this->button->setTitle(string("Click me!")); 				// [button setTitle:@"Click me!"];
+		$drawView->addSubview($this->button);							// [drawView addSubview:button];
+		$this->button->setTarget('@self');							// [button setTarget: self];
+		$this->button->setAction(sel('myButtonWasHitAction:')); 		// [button setAction: @selector(myButtonWasHit:)];
+
+        
+        $window->getContentView()->setNeedsDisplay(TRUE);
 	}
 	
     /**
@@ -105,6 +126,12 @@ class StandardController extends AbstractActionController {
      */
 	public function loadNibAction($command) {
     }
+	
+	public function myButtonWasHitAction($command) {
+		Runtime::pd("Bingo the action was called!");
+        $this->button->setTitle("Thank you for clicking!");
+        $this->button->setEnabled(FALSE);
+	}
 }
 
 ?>

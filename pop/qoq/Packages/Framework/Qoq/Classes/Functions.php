@@ -35,6 +35,22 @@ function uint($value) {
 }
 
 /**
+ * Signal a value as a selector.
+ * 
+ * @param mixed $value A string value.
+ * @return \Qoq\ValueObject  Returns a value object
+ */
+function sel($value) {
+	return new \Qoq\Selector($value);
+}
+/**
+ * @see sel()
+ */
+function selector($value) {
+	return new \Qoq\Selector($value);
+}
+
+/**
  * Returns the shared nil instance.
  * 
  * @return Nil

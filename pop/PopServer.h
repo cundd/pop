@@ -43,6 +43,11 @@
 #define USE_NCURSES 0
 #endif
 
+// Print profiling information
+#ifndef SHOW_PROFILING
+#define SHOW_PROFILING 0
+#endif
+
 
 // Print debug information
 // Possible values:
@@ -52,7 +57,7 @@
 // WARNING: Some Objective-C objects (i.e. NSURL) must not be print, 
 // before they are initialized.
 #ifndef SHOW_DEBUG_INFO
-#define SHOW_DEBUG_INFO 1
+#define SHOW_DEBUG_INFO 0
 #endif
 
 
@@ -92,6 +97,7 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
     
     NSString *commandQueue;
     NSCharacterSet *commandDelimiter;
+    BOOL didSendResponseForCommand;
     
     NSMutableDictionary *objectPool;
     BOOL targetIsClass;
@@ -328,11 +334,9 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
 - (void)sendObject:(id)theObject;
 
 /**
- * Forwards all selector names ending with "Action" to QOQ.
- *
- * @param	invocation		The invocation to forward
+ * Sends the void message object to QOQ.
  */
-- (void)forwardInvocation:(NSInvocation *)invocation;
+- (void)sendVoid;
 
 
 /** @name Task management */
@@ -487,6 +491,14 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
  */
 - (BOOL)identifierSignalsClass:(NSString *)identifier;
 
+/**
+ * Handles the return value of the given invocation and method signature
+ *
+ * @param invocation    The invocation object
+ * @return              Returns if the return value has been handled successfully
+ */
+- (BOOL)handleReturnValueForInvocation:(NSInvocation *)invocation;
+
 
 /** @name Preparing raw commands */
 /**
@@ -512,9 +524,34 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
  * pass the regular expression.
  *
  * @param 	input	The string to clean up
- * @return					Returns a prepared copy of the input
+ * @return			Returns a prepared copy of the input
  */
 - (NSString *)cleanupString:(NSString *)input;
+
+
+/** @name Profiler */
+/**
+ * Prints a simple profiling message
+ */
++ (void)profile;
+
+/**
+ * Prints a simple profiling message
+ *
+ * @param message   A message to display
+ */
++ (void)profile:(NSString *)message;
+
+/**
+ * Prints a simple profiling message and an additional warning if the last 
+ * routine took longer than the given warning interval.
+ *
+ * @param message           A message to display
+ * @param warning           A warning to display when the last routine was too long
+ * @param warningInterval   Warn when the routine took longer than this value
+ */
++ (void)profile:(NSString *)message andShowWarning:(NSString *)warning afterTimeInterval:(NSTimeInterval)warningInterval;
+
 
 
 /** @name Shared instance */

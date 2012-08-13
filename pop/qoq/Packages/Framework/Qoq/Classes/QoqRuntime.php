@@ -35,7 +35,14 @@ class QoqRuntime {
 	 * @var object
 	 */
 	protected $application = NULL;
-    
+	
+	/**
+	 * The time to wait for a response in microseconds.
+	 * 
+	 * @var integer
+	 */
+	protected $waitTime = 2000000;
+	
     /**
      * Indicates if the runtime should test if the POP server is still available and shut down if it isn't.
      * 
@@ -58,6 +65,13 @@ class QoqRuntime {
 	 * @var QoqRuntime
 	 */
 	static protected $sharedInstance = NULL;
+	
+	/**
+	 * The sleep interval in microseconds.
+	 * 
+	 * @var int
+	 */
+	static protected $sleepTime = 5000;
 	
 	/**
 	 * Initializes the runtime system.
@@ -100,27 +114,35 @@ class QoqRuntime {
 	public function run() {
 		$runCounter = 0;
         $checkIfServerIsAlive = 0;
+		$sleepTime = self::$sleepTime;
 		static $calledApplicationDidFinishLaunching = FALSE;
-        
+		
         $this->pipe = fopen($this->getPipeName(), 'r');
+        stream_set_blocking($this->pipe, 1);
+        
 		$this->getApplication();
-		while (1) {
-			$line = trim(fread($this->pipe, 1024));
-			if ($line) {
-                $this->dispatch($line);
-			}
+        while (1) {
+            // As long there is input from POP handle it
+            while ($line = fread($this->pipe, 1024)) {
+                $line = trim($line);
+                #$line = trim(fread($this->pipe, 1024));
+                if ($line) {
+                    $this->dispatch($line);
+                }
+            }
             
             // Check if the server is alive every 1000th run
             if ($this->terminateIfServerIsNotAlive && !$checkIfServerIsAlive--) {
                 $this->checkIfServerIsAlive();
                 $checkIfServerIsAlive = 100;
             }
-			
-			if (++$runCounter > 1000 && $this->runStandalone) {
-				exit();
-			}
-			usleep(100000);
-		}
+            
+            if (++$runCounter > 1000 && $this->runStandalone) {
+                exit();
+            }
+            
+            usleep($sleepTime);
+        }
 	}
 	
 	
@@ -246,7 +268,8 @@ class QoqRuntime {
 	 */
 	static public function makeInstanceFromPopReturn($value, $identifier) {
 		$colonLocation = strpos($value, ':');
-		$class = substr($value, 1, $colonLocation - 1);
+		$classNameStart = ($value[0] === '<') ? 1 : 0;
+		$class = substr($value, $classNameStart, $colonLocation - 1);
 		
 		$proxyObject = new ProxyObject($class, '>dontSend');
 		$proxyObject->setUuid($identifier);
@@ -268,9 +291,8 @@ class QoqRuntime {
 	 */
 	static public function getValueForKeyPath($identifier, $dontCreateProxy = FALSE) {
 		$command = "get $identifier";
-		self::sendCommand($command);
-		$value = self::sharedInstance()->waitForResponse();
-        if ($dontCreateProxy === FALSE) {
+		$value = self::sendCommand($command);
+		if ($dontCreateProxy === FALSE) {
 			if (substr($value, 0, 1) === '<' && strpos($value, ': 0x') !== FALSE) {
 				$value = self::makeInstanceFromPopReturn($value, $identifier);
 			} else if (substr($value, 0, 2) === 'NS' && preg_match('!^NS[a-zA-Z]+ColorSpace!', $value)) {
@@ -306,26 +328,43 @@ class QoqRuntime {
 	}
 	
 	/**
-	 * Sends the given command to the POP server.
+	 * Sends the given command to the POP server and returns the response
 	 * 
-	 * @param string $command The command to send
-	 * @return void
+	 * @param   string    $command          The command to send
+     * @param   boolean   $waitForResponse  Set this to FALSE if you don't want to wait for the response, in this case nil will be returned
+	 * @return  mixed                       Returns the response from POP
 	 */
-	static public function sendCommand($command) {
+	static public function sendCommand($command, $waitForResponse = TRUE) {
+		// Clear the response buffer
+		self::sharedInstance()->clearResponseBuffer();
+		
 		echo $command . PHP_EOL;
+		
+		$trimmedCommand = trim($command);
+        if (!$waitForResponse || $trimmedCommand[0] === '#' || $trimmedCommand[0] === '>' || substr($trimmedCommand, 0, 2) === '//') {
+			return nil();
+		}
+		return self::sharedInstance()->waitForResponse();
 	}
 	
 	/**
 	 * Waits and returns the first response line from the POP server.
-	 * 
-	 * @return object  Returns the string representation
+	 *
+	 * @param	integer		$microseconds	The microseconds to wait for the response
+	 * @return 	mixed  						Returns the parsed response
 	 */
-	public function waitForResponse() {
-		while (1) {
+	public function waitForResponse($microseconds = NULL) {
+		$sleepTime = self::$sleepTime;
+		if ($microseconds === NULL) {
+			$microseconds = $this->getWaitTime();
+		}
+		while ($microseconds > 0) {
 			$line = trim(fread($this->pipe, 1024));
 			if ($line) {
 				if ($line === '(null)') {
-					return NULL;
+					return nil();
+				} else if ($line === '(void)') {
+					return nil();
 				} else if ($line === '(bool)true') {
 					return FALSE;
 				} else if ($line === '(bool)true') {
@@ -333,8 +372,43 @@ class QoqRuntime {
 				}
 				return $line;
 			}
-			usleep(100000);
+			$microseconds -= $sleepTime;
+			usleep($sleepTime);
 		}
+		return nil();
+	}
+	
+	/**
+	 * Sets the file position indicator to the end of the pipe.
+	 * 
+	 * @return	boolean		Returns TRUE on success, otherwise FALSE.
+	 */
+	public function clearResponseBuffer() {
+		if (fseek($this->pipe, 0, SEEK_END) === 0) {
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	/**
+	 * Returns the time to wait for a response in microseconds.
+	 *
+	 * @return integer
+	 */
+	public function getWaitTime() {
+		return $this->waitTime;
+	}
+	
+	/**
+	 * Sets the time to wait for a response in microseconds.
+	 *
+	 * @param 	integer $value	The new microseconds to wait
+	 * @return 	integer			The previous value
+	 */
+	public function setWaitTime($value) {
+		$oldWaitTime = $this->waitTime;
+		$this->waitTime = $value;
+		return $oldWaitTime;
 	}
 	
 	/**
@@ -425,10 +499,8 @@ class QoqRuntime {
 	 */
 	static public function convertMethodNameToCommand($identifier, $methodName, $arguments = array()) {
 		$convertedArguments = array();
-		$argument = reset($arguments);
-		while ($argument) {
+		foreach ($arguments as $argument) {
 			$convertedArguments[] = self::convertValueToArgumentString($argument);
-			$argument = next($arguments);
 		}
 		
 		if (is_object($identifier)) {
@@ -443,6 +515,9 @@ class QoqRuntime {
 	
 	/**
 	 * Returns the command string for the given value.
+	 *
+	 * If the given value is a string, but begins with an at-sign ('@') the string
+	 * will not be prepared.
 	 * 
 	 * @param mixed $value The value
 	 * @return string  The string representation of the value
@@ -451,14 +526,16 @@ class QoqRuntime {
 		$result = '';
 		if ($value === Nil::nil()) {
 			$result = 'nil';
-		} else if (is_string($value) && substr($value, 0 ,1) !== '@') {
-			$result = self::prepareString($value);
+		} else if (is_bool($value)) {
+			$result = "(bool)$value";
 		} else if (is_int($value)) {
 			$result = "(int)$value";
 		} else if (is_float($value)) {
 			$result = "(float)$value";
 		} else if (is_object($value)) {
 			$result = $value . '';
+		} else if (is_string($value) && $value[0] !== '@') {
+			$result = self::prepareString($value);
 		} else {
 			$result = '' . $value;
 		}
@@ -500,11 +577,13 @@ class QoqRuntime {
 		$backtrace = NULL;
 		$options = DEBUG_BACKTRACE_PROVIDE_OBJECT & DEBUG_BACKTRACE_IGNORE_ARGS;
 		
+		//$output = '# ' . PHP_EOL . PHP_EOL;
+		
 		ob_start();
 		foreach ($args as $var) {
 			var_dump($var);
 		}
-		$output = '# ' . ob_get_clean();
+		$output = PHP_EOL . PHP_EOL . ob_get_clean();
 		$output = str_replace(array(PHP_EOL, '\n', '\r'), PHP_EOL . '# ', $output);
 		
 		self::sendCommand($output);

@@ -84,7 +84,7 @@ static PopServer *sharedPopServerInstance = nil;
         id newArgument;
         NSString * argumentIdentifier = [pathParts objectAtIndex:i];
         
-        if([argumentIdentifier isEqualToString:@"self"]){ // Self
+        if([argumentIdentifier isEqualToString:@"self"] || [argumentIdentifier isEqualToString:@"@self"]){ // Self
             newArgument = self;
         } else if([argumentIdentifier hasPrefix:@"@"] || [argumentIdentifier hasPrefix:@"("]){ // Check if it is a special or simple type argument
             newArgument = argumentIdentifier;
@@ -123,6 +123,9 @@ static PopServer *sharedPopServerInstance = nil;
     } else if([argument hasPrefix:@"(bool)"]){
         BOOL value = [[argument substringFromIndex:6] boolValue];
         [invocation setArgument:&value atIndex:index];
+    } else if([argument hasPrefix:@"(SEL)"]){
+        SEL value = NSSelectorFromString([argument substringFromIndex:5]);
+        [invocation setArgument:&value atIndex:index];
     }
 }
 
@@ -160,6 +163,16 @@ static PopServer *sharedPopServerInstance = nil;
                                  [[points objectAtIndex:1] floatValue]
                                  );
         [invocation setArgument:&point atIndex:index];
+    } else if([argument hasPrefix:@"@NSPointFromString("]){
+        NSUInteger length = [argument length] - 19 - 1;
+        argument = [[argument substringWithRange:NSMakeRange(19, length)] stringByReplacingOccurrencesOfString:@" " withString:@""];
+        NSPoint point = NSPointFromString(argument);
+        [invocation setArgument:&point atIndex:index];
+    } else if([argument hasPrefix:@"@NSRectFromString("]){
+        NSUInteger length = [argument length] - 18 - 1;
+        argument = [[argument substringWithRange:NSMakeRange(18, length)] stringByReplacingOccurrencesOfString:@" " withString:@""];
+        NSRect rect = NSRectFromString(argument);
+        [invocation setArgument:&rect atIndex:index];
     } else if([argument hasPrefix:@"@\""] || [argument hasPrefix:@"@'"]){
         NSUInteger length = [argument length] - 2 - 1;
         argument = [argument substringWithRange:NSMakeRange(2, length)];
@@ -292,7 +305,7 @@ static PopServer *sharedPopServerInstance = nil;
 #if SHOW_DEBUG_INFO > 1
     NSLog(@"Args: %@", arguments);
 #endif
-    
+        
     // Next we create the invocation that will actually call the required selector.
     invocation = [NSInvocation invocationWithMethodSignature:signature];
     
@@ -326,9 +339,11 @@ static PopServer *sharedPopServerInstance = nil;
     
     @try {
         [invocation invoke];
+        [self handleReturnValueForInvocation:invocation];
     } @catch(NSException *e) {
         success = FALSE;
         NSLog(@"Exception: %@",e);
+        [self sendObject:e];
         if(![object respondsToSelector:NSSelectorFromString(methodName)]){
             NSLog(@"Target doesn't respond to %@", methodName);
         }
@@ -381,14 +396,79 @@ static PopServer *sharedPopServerInstance = nil;
         [self sendObject:@"(bool)0"];
     } else if ((int)result == 0x0000000000000001) {
         [self sendObject:@"(bool)1"];
+#if SHOW_DEBUG_INFO > 1
         NSLog(@"Result: TRUE");
+#endif
         return TRUE;
     }
-    
+
+#if SHOW_DEBUG_INFO > 1
     NSLog(@"Result: %@", result);
+#endif
+    
+    // If the result is an object QOQ has to fetch the object afterwards
     identifier = [NSString stringWithFormat:@"classObj-%@-%s", className, (char *)aSelector];
     if (result) {
         [self setObject:result inPoolWithIdentifier:identifier];
+    }
+    [self sendVoid];
+    return TRUE;
+}
+
+- (BOOL)handleReturnValueForInvocation:(NSInvocation *)invocation{
+    NSMethodSignature *signature;
+    NSUInteger returnValueLength;
+    id object;
+//    const char NSObjCNoType = 0;
+//    const char NSObjCVoidType = 'v';
+//    const char NSObjCCharType = 'c';
+//    const char NSObjCShortType = 's';
+//    const char NSObjCLongType = 'l';
+//    const char NSObjCLonglongType = 'q';
+//    const char NSObjCFloatType = 'f';
+//    const char NSObjCDoubleType = 'd';
+//    const char NSObjCBoolType = 'B';
+//    const char NSObjCSelectorType = ':';
+//    const char NSObjCObjectType = '@';
+//    const char NSObjCStructType = '{';
+//    const char NSObjCPointerType = '^';
+//    const char NSObjCStringType = '*';
+//    const char NSObjCArrayType = '[';
+//    const char NSObjCUnionType = '(';
+//    const char NSObjCBitfield = 'b';
+
+    signature = invocation.methodSignature;
+    returnValueLength = [signature methodReturnLength];
+    
+#if SHOW_DEBUG_INFO > 1
+    NSLog(@"MRT: %s", [signature methodReturnType]);
+#endif
+    
+    if (strcmp([signature methodReturnType], "@") == 0){ // Object
+        [invocation getReturnValue:&object];
+        [self sendObject:object];
+    } else if(strcmp([signature methodReturnType], "v") == 0){ // void
+        [self sendVoid];
+    } else if(strcmp([signature methodReturnType], "B") == 0 || strcmp([signature methodReturnType], "c") == 0){ // Boolean
+        char *buffer;
+        buffer = (char *)malloc(returnValueLength);
+        [invocation getReturnValue:buffer];
+        if (buffer) {
+            [self sendObject:@"(bool)1"];
+        } else {
+            [self sendObject:@"(bool)0"];
+        }
+    } else if(strcmp([signature methodReturnType], "f") == 0){ // Numeric
+        float *buffer;
+        buffer = (float *)malloc(returnValueLength);
+        [invocation getReturnValue:buffer];
+        if (buffer) {
+            [self sendObject:[NSString stringWithFormat:@"(float)%.6f", *buffer]];
+        } else {
+            [self sendObject:@"(float)0"];
+        }
+    } else {
+        [self sendVoid];
     }
     return TRUE;
 }
@@ -396,12 +476,21 @@ static PopServer *sharedPopServerInstance = nil;
 
 #pragma mark Parsing commands
 - (BOOL)parseCommandString:(NSString *)commandString{
+    BOOL result = TRUE;
     NSArray *commandParts = [commandString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSString *signal = [commandParts objectAtIndex:0];
     
+    NSString * profilingMessage = [NSString stringWithFormat:@"Will parse command '%@'", commandString];
+    [PopServer profile:profilingMessage andShowWarning:[NSString stringWithFormat:@"Very long routine before '%@'", commandString] afterTimeInterval:2.0];
+//    [PopServer profile:@"Will parse command" andShowWarning:[NSString stringWithFormat:@"Very long routine before '%@'", commandString] afterTimeInterval:2.0];
+    
 #if SHOW_DEBUG_INFO > 0
     NSLog(@"CMD: %@", commandString);
+//    say(@"CMD: %@\n", commandString);
 #endif
+    
+    // Reset didSendResponseForCommand
+    didSendResponseForCommand = FALSE;
     
     // Handle the commands
     if([signal hasPrefix:@"@\""]){ // newly created strings
@@ -457,7 +546,6 @@ static PopServer *sharedPopServerInstance = nil;
         NSLog(@"New class: '%@'", newClassName);
 #endif
         if(init){
-            NSLog(@"Init");
             object = [[NSClassFromString(newClassName) alloc] init];
         } else {
             object = [NSClassFromString(newClassName) alloc];
@@ -522,9 +610,16 @@ static PopServer *sharedPopServerInstance = nil;
     } else if([self pluginHandleCommandParts:commandParts]){ // plugin
     } else { // Couldn't parse command
         say(@"Couldn't parse command %@\n", commandString);
-        return FALSE;
+        result = FALSE;
     }
-    return TRUE;
+    
+    [PopServer profile:@"Did parse command" andShowWarning:commandString afterTimeInterval:2.0];
+    
+    // If nothing has been sent so far send (void)
+    if (!didSendResponseForCommand) {
+        [self sendVoid];
+    }
+    return result;
 }
 
 - (BOOL)executeWithCommandParts:(NSArray *)commandParts{
@@ -555,7 +650,7 @@ static PopServer *sharedPopServerInstance = nil;
 #endif
     }
         
-    if(!targetIsClass && [arguments count] == 0){
+    if(FALSE && !targetIsClass && [arguments count] == 0){
 #if SHOW_DEBUG_INFO > 1
         NSLog(@"Perform selector (without args) %@", objectMethod);
 #endif
@@ -634,20 +729,14 @@ static PopServer *sharedPopServerInstance = nil;
     [self sendCommand:theCommand sender:qoqUnknownSenderArgument];
 }
 
-- (void)forwardInvocation:(NSInvocation *)invocation{
-    SEL aSelector = [invocation selector];
-    NSString *selectorName = NSStringFromSelector(aSelector);
-    
-    if([selectorName hasSuffix:@"Action:"]){
-        [self sendCommand:selectorName];
-    } else {
-        [self doesNotRecognizeSelector:aSelector];
-    }
-}
-
 - (void)sendObject:(id)theObject{
     NSString * objectString;
-    objectString = [NSString stringWithFormat:@"%@", theObject];
+    if ([theObject isKindOfClass:[NSString class]]) {
+        objectString = [self transformString:theObject];
+    } else {
+        objectString = [NSString stringWithFormat:@"%@", theObject];
+    }
+    
     
 #if SHOW_DEBUG_INFO > 1
     NSLog(@"Sending object to QOQ: '%@'", objectString);
@@ -657,6 +746,46 @@ static PopServer *sharedPopServerInstance = nil;
     } else {
         [qoqWriteHandle writeData:[objectString dataUsingEncoding:NSUTF8StringEncoding]];
     }
+    didSendResponseForCommand = TRUE;
+}
+
+- (void)sendVoid {
+    // Don't send the void message in the interactive mode
+    if (mode != CDPopModeInteractive){
+        [self sendObject:@"(void)"];
+    }
+}
+
+- (void)forwardInvocation:(NSInvocation *)invocation{
+    SEL aSelector = [invocation selector];
+    NSString *selectorName = NSStringFromSelector(aSelector);
+    if([selectorName hasSuffix:@"Action:"]){
+        [self sendCommand:selectorName];
+    } else {
+        [super forwardInvocation:invocation];
+    }
+}
+
+//- (BOOL)respondsToSelector:(SEL)aSelector {
+//    NSString *selectorName;
+//    if (![super respondsToSelector:aSelector]) {
+//        selectorName = NSStringFromSelector(aSelector);
+//        if(![selectorName hasSuffix:@"Action:"]){
+//            return FALSE;
+//        }
+//    }
+//    return TRUE;
+//}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
+    NSMethodSignature * methodSignature = [super methodSignatureForSelector:aSelector];
+    if (!methodSignature) {
+        NSString *selectorName = NSStringFromSelector(aSelector);
+        if([selectorName hasSuffix:@"Action:"]){
+            methodSignature = [super methodSignatureForSelector:@selector(sendCommand:)];
+        }
+    }
+    return methodSignature;
 }
 
 
@@ -1181,5 +1310,49 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
         sharedPopServerInstance = [[PopServer alloc] init];
     }
     return sharedPopServerInstance;
+}
+
+
+#pragma mark Profiler
+/**
+ * Prints a simple profiling message
+ */
++ (void)profile {
+#if SHOW_PROFILING
+    [self profile:@"" andShowWarning:nil afterTimeInterval:(NSTimeInterval)300.0];
+#endif
+}
+
+/**
+ * Prints a simple profiling message
+ *
+ * @param message   A message to display
+ */
++ (void)profile:(NSString *)message {
+#if SHOW_PROFILING
+    [self profile:message andShowWarning:nil afterTimeInterval:(NSTimeInterval)300.0];
+#endif
+}
+
++ (void)profile:(NSString *)message andShowWarning:(NSString *)warning afterTimeInterval:(NSTimeInterval)warningInterval {
+#if SHOW_PROFILING
+    static NSDate *startDate, *lastDate;
+    static NSDateFormatter *dateFormatter;
+    NSDate *currentDate;
+    
+    if (!startDate) {
+        startDate = [NSDate date];
+        lastDate = startDate;
+        dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"HH:mm:ss:SSS"];
+    }
+    
+    currentDate = [NSDate date];
+    if (warning && [currentDate timeIntervalSinceDate:lastDate] > warningInterval) {
+        printf("PRF-Warning: The last routine took longer than %.4f seconds! Msg: %s\n", warningInterval, [warning UTF8String]);
+    }
+    printf("PRF: %.4f \t\t Uptime: %.4f \t\t Now: %s Msg: %s\n", [currentDate timeIntervalSinceDate:lastDate], [currentDate timeIntervalSinceDate:startDate], [[dateFormatter stringFromDate:startDate] UTF8String], [message UTF8String]);
+    lastDate = currentDate;
+#endif
 }
 @end

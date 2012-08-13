@@ -48,20 +48,49 @@ class ProxyObject {
 	 * @return object
 	 */
 	public function __construct($className = '') {
+		$dontSend = FALSE;
 		$arguments = func_get_args();
 		
 		/*
-		 * If the class name of this is the Proxy Object, the first argument has
-		 * to be the Objective-C class name.
+		 * If the first argument is an array, it may be a dictionary with
+		 * configurations for the Proxy Object.
 		 */
-		$className = get_class($this);
-		if ($className === __CLASS__) {
-			$className = array_shift($arguments);
+		if (is_array($className)) {
+			if (isset($className['className'])) {
+				$this->_className = $className['className'];
+			}
+			if (isset($className['uuid'])) {
+				$this->_uuid = $className['uuid'];
+			}
+			if (isset($className['dontSend'])) {
+				$dontSend = $className['dontSend'];
+			} else if (isset($className['>dontSend'])) {
+				$dontSend = $className['>dontSend'];
+			}
+			array_shift($arguments);
 		}
-		$this->_className = $className;
-		$this->_uuid = 'inst-' . $className . '-' . time();
 		
-		if (!in_array('>dontSend', $arguments, TRUE)) {
+		if (!$this->_className) {
+			/*
+			 * If the class name of this is the Proxy Object, the first argument has
+			 * to be the Objective-C class name, otherwise the PHP class is recognized
+			 * as a subclass of ProxyObject and the subclass' name is used.
+			 */
+			$className = get_class($this);
+			if ($className === __CLASS__) {
+				$className = array_shift($arguments);
+			}
+			$this->_className = $className;
+		}
+        
+		if (!$this->_uuid) {
+			// Construct the UUID with the microtime
+			$uuidSuffix = str_replace('.', '-', '' . microtime(TRUE));
+			$this->_uuid = 'inst-' . $className . '-' . $uuidSuffix;
+		}
+		
+		
+		if (!$dontSend && !in_array('>dontSend', $arguments, TRUE)) {
 			$this->createObjectInPop($arguments);
 		}
 		
@@ -77,7 +106,7 @@ class ProxyObject {
 	protected function createObjectInPop($arguments) {
 		$popData = NULL;
 		$identifier = $this->getUuid();
-		Runtime::sendCommand('new ' . $this->_className . ' ' . $identifier . ' ' . implode(' ', $arguments));
+		Runtime::sendCommand('new ' . $this->_className . ' ' . $identifier . ' ' . implode(' ', $arguments), FALSE);
 		
 		/*
 		 * Some Objective-C objects (i.e. NSURL) can not be retrieved until they
@@ -225,6 +254,12 @@ class ProxyObject {
 		}
 		
 		$command = Runtime::convertMethodNameToCommand($this, $name, $arguments);
+		$response = Runtime::sendCommand($command);
+		if ($response && $response !== nil()) {
+			return $response;
+		}
+		return nil();
+	
 		return Runtime::sendCommand($command);
 	}
 	
@@ -242,9 +277,8 @@ class ProxyObject {
 	static public function __callStatic($name, $arguments) {
 		$className = get_called_class();
 		$command = Runtime::convertMethodNameToCommand($className, $name, $arguments);
-		Runtime::sendCommand($command);
-		$response = Runtime::sharedInstance()->waitForResponse();
-		if (trim($response)) {
+		$response = Runtime::sendCommand($command);
+		if ($response && $response !== nil()) {
 			return $response;
 		}
 		return Runtime::getValueForKeyPath('classObj-' . $className . '-' . $name);
