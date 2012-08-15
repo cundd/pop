@@ -500,6 +500,9 @@ static PopServer *sharedPopServerInstance = nil;
         if (SHOW_DEBUG_INFO == 0) { // If the command wasn't already printed
             say(@"%@\n", commandString);
         }
+        
+        // Set didSendResponseForCommand to TRUE, because comments don't send anything
+        didSendResponseForCommand = TRUE;
     } else if([signal isEqualToString:@"new"] || [signal isEqualToString:@"alloc"]){ // object creation
         id object;
         BOOL init = FALSE;
