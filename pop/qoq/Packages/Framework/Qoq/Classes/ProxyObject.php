@@ -5,7 +5,7 @@ namespace Qoq;
  * @license
  */
 
-use Qoq\QoqRuntime as Runtime;
+use Qoq\Runtime as Runtime;
 use Qoq\Helpers\ObjectHelper as ObjectHelper;
 
 /**
