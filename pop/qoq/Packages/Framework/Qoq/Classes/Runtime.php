@@ -175,8 +175,12 @@ class Runtime {
 	 */
 	public function getApplication() {
 		if (!$this->application) {
-			$settings = require_once(__DIR__ . '/../../../../Configuration/Settings.php');
-			$applicationControllerClass = $settings['PrincipalClass'];
+			$settings = array();
+			$applicationControllerClass = $this->getControllerClassNameFromInfoPlist();
+			if (!$applicationControllerClass) {
+				$settings = require_once(__DIR__ . '/../../../../Configuration/Settings.php');
+				$applicationControllerClass = $settings['PrincipalClass'];
+			}
 			$this->application = self::makeInstance($applicationControllerClass);
             
 			/*
@@ -187,12 +191,55 @@ class Runtime {
 				$this->application->applicationDidFinishLaunching();
 			}
 			
-			$this->terminateIfServerIsNotAlive = $settings['TerminateIfServerIsNotAlive'];
+			$this->terminateIfServerIsNotAlive = FALSE;
+			if (isset($settings['TerminateIfServerIsNotAlive'])) {
+				$this->terminateIfServerIsNotAlive = $settings['TerminateIfServerIsNotAlive'];
+			}
 		}
 		return $this->application;
 	}
 	
+	/**
+	 * Returns the QOQ controller class name from the info plist.
+	 * 
+	 * @return	string		Returns the class name or FALSE if it couldn't be read
+	 */
+	public function getControllerClassNameFromInfoPlist() {
+		$applicationSettings = $this->getSettingsFromInfoPlist();
+		if (isset($applicationSettings['QoqPrincipalClass'])) {
+			return $applicationSettings['QoqPrincipalClass'];
+		}
+		return FALSE;
+	}
 	
+	/**
+	 * Returns the settings read from the info plist.
+	 * 
+	 * @return	array<string>
+	 */
+	public function getSettingsFromInfoPlist() {
+		static $applicationSettings = NULL;
+		if (!$applicationSettings) {
+			$keys = array();
+			$values = array();
+			$plistPath = self::getBasePath() . '../../Info.plist';
+			$xmlData = simplexml_load_file($plistPath);
+			
+			
+			foreach ($xmlData->dict->key as $key) {
+				$keys[] = '' . $key;
+			}
+			
+			foreach ($xmlData->dict->string as $value) {
+				$values[] = '' . $value;
+			}
+			
+			self::pd($keys);
+			$applicationSettings = array_combine($keys, $values);
+			self::pd($applicationSettings);
+		}
+		return $applicationSettings;
+	}
 	
 	/* MWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
 	/* CLASS LOADING AND OBJECT CREATION    WMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWM */
@@ -204,6 +251,9 @@ class Runtime {
 	 * @return boolean  Returns TRUE if the class file could be loaded, otherwise FALSE
 	 */
 	static public function loadClassFile($class, $allowAlias = TRUE) {
+		static $useResourceDirectoryAsBase = -1;
+		
+		$basePath = self::getBasePath();
 		$controllerClassPath = str_replace('\\', '/', $class);
 		$firstSlashPosition = strpos($controllerClassPath, '/');
         
@@ -219,10 +269,19 @@ class Runtime {
 		}
 		$package = substr($controllerClassPath, 0, $firstSlashPosition);
 		$relativeClassPathFromPackage = substr($controllerClassPath, $firstSlashPosition);
-		$absoluteClassPathApplicationDirectory = __DIR__ . '/../../../Application/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
-		$absoluteClassPathFrameworkDirectory = __DIR__ . '/../../../Framework/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
 		
-		if (file_exists($absoluteClassPathApplicationDirectory)) {
+		// Check if the classes should be searched inside the resource directory
+		if ($useResourceDirectoryAsBase === -1) {
+			$useResourceDirectoryAsBase = file_exists($basePath . '../Packages/');
+		}
+		
+		$absoluteClassPathResourceDirectory = $basePath . '../Packages/Application/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
+		$absoluteClassPathApplicationDirectory = $basePath . 'Packages/Application/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
+		$absoluteClassPathFrameworkDirectory = $basePath . 'Packages/Framework/' . $package . '/Classes/' . $relativeClassPathFromPackage . '.php';
+		
+		if ($useResourceDirectoryAsBase && file_exists($absoluteClassPathResourceDirectory)) {
+			require_once($absoluteClassPathResourceDirectory);
+		} else if (file_exists($absoluteClassPathApplicationDirectory)) {
 			require_once($absoluteClassPathApplicationDirectory);
 		} else if (file_exists($absoluteClassPathFrameworkDirectory)) {
 			require_once($absoluteClassPathFrameworkDirectory);
@@ -446,7 +505,7 @@ class Runtime {
 	 */
 	static public function sharedInstance() {
 		if (self::$sharedInstance === NULL) {
-			new QoqRuntime();
+			new static();
 		}
 		return self::$sharedInstance;
 	}
@@ -605,6 +664,9 @@ class Runtime {
         $i--;
 		$file = realpath(@$backtrace[$i]['file']);
 		$file = substr($file, strlen(self::getBasePath()));
+		if (substr($file, 0, 16) === 'ages/Application') {
+			$file = 'Pack' . $file;
+		}
 		self::sendCommand('# ' . $file . ' @ ' . @$backtrace[$i]['line']);
 		
 		
@@ -624,7 +686,7 @@ class Runtime {
 	 * @return string
 	 */
 	static public function getBasePath() {
-		return realpath(__DIR__ . '/../../../../');
+		return realpath(__DIR__ . '/../../../../') . '/';
 	}
 	
 	/**

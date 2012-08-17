@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6517B40115ACABD400C97411 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6517B40015ACABD400C97411 /* About.xib */; };
+		6534CD0D15DBAC7900F605B0 /* Packages in Resources */ = {isa = PBXBuildFile; fileRef = 6534CD0C15DBAC7900F605B0 /* Packages */; };
 		657557B11595C5BB00B1FCEF /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 657557B01595C5BB00B1FCEF /* Cocoa.framework */; };
 		657557BB1595C5BB00B1FCEF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 657557B91595C5BB00B1FCEF /* InfoPlist.strings */; };
 		657557BD1595C5BB00B1FCEF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 657557BC1595C5BB00B1FCEF /* main.m */; };
@@ -35,6 +36,7 @@
 
 /* Begin PBXFileReference section */
 		6517B40015ACABD400C97411 /* About.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = About.xib; sourceTree = "<group>"; };
+		6534CD0C15DBAC7900F605B0 /* Packages */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Packages; path = ../../pop/Packages; sourceTree = "<group>"; };
 		657557AC1595C5BB00B1FCEF /* SampleApplication.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SampleApplication.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		657557B01595C5BB00B1FCEF /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		657557B31595C5BB00B1FCEF /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -139,6 +141,7 @@
 		657557B71595C5BB00B1FCEF /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				6534CD0C15DBAC7900F605B0 /* Packages */,
 				657557BF1595C5BB00B1FCEF /* Credits.rtf */,
 				657557B91595C5BB00B1FCEF /* InfoPlist.strings */,
 				657557BC1595C5BB00B1FCEF /* main.m */,
@@ -245,6 +248,7 @@
 				657557C71595C5BC00B1FCEF /* MainMenu.xib in Resources */,
 				657557EF1595C63800B1FCEF /* qoq in Resources */,
 				6517B40115ACABD400C97411 /* About.xib in Resources */,
+				6534CD0D15DBAC7900F605B0 /* Packages in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

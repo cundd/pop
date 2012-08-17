@@ -20,8 +20,6 @@
 		6557EF16155181A900830335 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6557EEF6155181A800830335 /* Cocoa.framework */; };
 		6557EF1E155181A900830335 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF1C155181A900830335 /* InfoPlist.strings */; };
 		6557EF21155181A900830335 /* popTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6557EF20155181A900830335 /* popTests.m */; };
-		6557EF2F15518A4300830335 /* run.php in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF2E15518A4300830335 /* run.php */; };
-		6557EF311551A6EE00830335 /* run.phpsh in Resources */ = {isa = PBXBuildFile; fileRef = 6557EF301551A6EE00830335 /* run.phpsh */; };
 		657557FB1595D9DF00B1FCEF /* PopProxyObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 657557FA1595D9DF00B1FCEF /* PopProxyObject.m */; };
 		658A04F8157A3B300079D84F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 658A04F7157A3B300079D84F /* README.md */; };
 		65E359611564302E007BD73C /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 65E359601564302E007BD73C /* LICENSE */; };
@@ -77,8 +75,6 @@
 		6557EF1D155181A900830335 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		6557EF1F155181A900830335 /* popTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = popTests.h; sourceTree = "<group>"; };
 		6557EF20155181A900830335 /* popTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = popTests.m; sourceTree = "<group>"; };
-		6557EF2E15518A4300830335 /* run.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; path = run.php; sourceTree = "<group>"; };
-		6557EF301551A6EE00830335 /* run.phpsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = run.phpsh; sourceTree = "<group>"; };
 		657557E41595C5BC00B1FCEF /* SampleApplication.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SampleApplication.xcodeproj; path = SampleApplication/SampleApplication.xcodeproj; sourceTree = "<group>"; };
 		657557F91595D9DF00B1FCEF /* PopProxyObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopProxyObject.h; sourceTree = "<group>"; };
 		657557FA1595D9DF00B1FCEF /* PopProxyObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopProxyObject.m; sourceTree = "<group>"; };
@@ -178,8 +174,6 @@
 				6557EEFE155181A800830335 /* pop-Info.plist */,
 				6557EF04155181A800830335 /* pop-Prefix.pch */,
 				6504E47A1571791000243F49 /* qoq */,
-				6557EF2E15518A4300830335 /* run.php */,
-				6557EF301551A6EE00830335 /* run.phpsh */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -309,8 +303,6 @@
 			files = (
 				6557EF01155181A800830335 /* InfoPlist.strings in Resources */,
 				6557EF07155181A800830335 /* Credits.rtf in Resources */,
-				6557EF2F15518A4300830335 /* run.php in Resources */,
-				6557EF311551A6EE00830335 /* run.phpsh in Resources */,
 				65E359611564302E007BD73C /* LICENSE in Resources */,
 				6504E47B1571791000243F49 /* qoq in Resources */,
 				658A04F8157A3B300079D84F /* README.md in Resources */,

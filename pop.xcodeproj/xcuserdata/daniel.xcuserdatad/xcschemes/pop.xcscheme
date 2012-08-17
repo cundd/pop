@@ -67,10 +67,7 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
-      <PathRunnable
-         FilePath = "/Applications/iTerm.app">
-      </PathRunnable>
-      <MacroExpansion>
+      <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "6557EEF1155181A800830335"
@@ -78,7 +75,7 @@
             BlueprintName = "pop"
             ReferencedContainer = "container:../../../../../Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
             argument = "NSZombieEnabled"
@@ -86,7 +83,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-a"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>

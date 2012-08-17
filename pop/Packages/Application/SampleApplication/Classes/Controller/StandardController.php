@@ -6,7 +6,7 @@ namespace SampleApplication\Controller;
  */
 
 use \Qoq;
-use \Qoq\QoqRuntime as Runtime;
+use \Qoq\Runtime as Runtime;
 use \Qoq\ProxyObject as ProxyObject;
 use \Qoq\Controller\AbstractActionController;
 
@@ -39,11 +39,7 @@ class StandardController extends AbstractActionController {
 		$window->makeKeyAndOrderFront(nil());
         
 		
-		Runtime::pd($drawView->getValueForKey('canDraw'));
-		
-		Runtime::pd('NOR' . Runtime::sendCommand('self no'));
-		Runtime::pd('NUR' . Runtime::sendCommand('self numeric'));
-        Runtime::pd($drawView->lockFocusIfCanDraw()); // [(NSView *)drawView lockFocus];
+		$drawView->lockFocusIfCanDraw(); // [(NSView *)drawView lockFocus];
         
         /*
 		$webView = Runtime::makeInstance('WebView');
@@ -77,7 +73,7 @@ class StandardController extends AbstractActionController {
         
         $path = new \NSBezierPath(TRUE); 						// [NSBezierPath bezierPath];
 		$path->init();
-		Runtime::pd($path);
+		
 		//Runtime::breakpoint($path);
         $path->setLineWidth(4); 								// [path setLineWidth:4];
         
@@ -116,6 +112,8 @@ class StandardController extends AbstractActionController {
 
         
         $window->getContentView()->setNeedsDisplay(TRUE);
+        Runtime::pd(Runtime::getBasePath() . '../');
+        Runtime::pd(glob(Runtime::getBasePath() . '../' . '*'));
 	}
 	
     /**
