@@ -1,0 +1,262 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		65B20CEA15DF950700F6A6C9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65B20CE915DF950700F6A6C9 /* Foundation.framework */; };
+		65B20CED15DF950700F6A6C9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 65B20CEC15DF950700F6A6C9 /* main.m */; };
+		65B20CF115DF950700F6A6C9 /* poi.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 65B20CF015DF950700F6A6C9 /* poi.1 */; };
+		65B20D0215DF953900F6A6C9 /* PopServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 65B20D0115DF953900F6A6C9 /* PopServer.m */; };
+		65B20D0815DF99EC00F6A6C9 /* PoiAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65B20D0715DF99EC00F6A6C9 /* PoiAppDelegate.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		65B20CE315DF950600F6A6C9 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				65B20CF115DF950700F6A6C9 /* poi.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		65B20CE515DF950600F6A6C9 /* poi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = poi; sourceTree = BUILT_PRODUCTS_DIR; };
+		65B20CE915DF950700F6A6C9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		65B20CEC15DF950700F6A6C9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		65B20CEF15DF950700F6A6C9 /* poi-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "poi-Prefix.pch"; sourceTree = "<group>"; };
+		65B20CF015DF950700F6A6C9 /* poi.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = poi.1; sourceTree = "<group>"; };
+		65B20D0015DF953900F6A6C9 /* PopServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PopServer.h; path = ../../pop/PopServer.h; sourceTree = "<group>"; };
+		65B20D0115DF953900F6A6C9 /* PopServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PopServer.m; path = ../../pop/PopServer.m; sourceTree = "<group>"; };
+		65B20D0615DF99EC00F6A6C9 /* PoiAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PoiAppDelegate.h; sourceTree = SOURCE_ROOT; };
+		65B20D0715DF99EC00F6A6C9 /* PoiAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PoiAppDelegate.m; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		65B20CE215DF950600F6A6C9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65B20CEA15DF950700F6A6C9 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		65B20CDA15DF950600F6A6C9 = {
+			isa = PBXGroup;
+			children = (
+				65B20CEB15DF950700F6A6C9 /* poi */,
+				65B20CE815DF950600F6A6C9 /* Frameworks */,
+				65B20CE615DF950600F6A6C9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		65B20CE615DF950600F6A6C9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				65B20CE515DF950600F6A6C9 /* poi */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		65B20CE815DF950600F6A6C9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				65B20CE915DF950700F6A6C9 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		65B20CEB15DF950700F6A6C9 /* poi */ = {
+			isa = PBXGroup;
+			children = (
+				65B20CEC15DF950700F6A6C9 /* main.m */,
+				65B20CF015DF950700F6A6C9 /* poi.1 */,
+				65B20D0615DF99EC00F6A6C9 /* PoiAppDelegate.h */,
+				65B20D0715DF99EC00F6A6C9 /* PoiAppDelegate.m */,
+				65B20D0015DF953900F6A6C9 /* PopServer.h */,
+				65B20D0115DF953900F6A6C9 /* PopServer.m */,
+				65B20CEE15DF950700F6A6C9 /* Supporting Files */,
+			);
+			path = poi;
+			sourceTree = "<group>";
+		};
+		65B20CEE15DF950700F6A6C9 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				65B20CEF15DF950700F6A6C9 /* poi-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		65B20CE415DF950600F6A6C9 /* poi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 65B20CF415DF950700F6A6C9 /* Build configuration list for PBXNativeTarget "poi" */;
+			buildPhases = (
+				65B20CE115DF950600F6A6C9 /* Sources */,
+				65B20CE215DF950600F6A6C9 /* Frameworks */,
+				65B20CE315DF950600F6A6C9 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = poi;
+			productName = poi;
+			productReference = 65B20CE515DF950600F6A6C9 /* poi */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		65B20CDC15DF950600F6A6C9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0440;
+				ORGANIZATIONNAME = "Daniel Corn";
+			};
+			buildConfigurationList = 65B20CDF15DF950600F6A6C9 /* Build configuration list for PBXProject "poi" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 65B20CDA15DF950600F6A6C9;
+			productRefGroup = 65B20CE615DF950600F6A6C9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				65B20CE415DF950600F6A6C9 /* poi */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		65B20CE115DF950600F6A6C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65B20CED15DF950700F6A6C9 /* main.m in Sources */,
+				65B20D0215DF953900F6A6C9 /* PopServer.m in Sources */,
+				65B20D0815DF99EC00F6A6C9 /* PoiAppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		65B20CF215DF950700F6A6C9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		65B20CF315DF950700F6A6C9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		65B20CF515DF950700F6A6C9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "poi/poi-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"USE_NCURSES=1",
+					"$(inherited)",
+					"kCDCommandLineTool=1",
+				);
+				OTHER_LDFLAGS = "-lncurses";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		65B20CF615DF950700F6A6C9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "poi/poi-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"USE_NCURSES=1",
+					"kCDCommandLineTool=1",
+				);
+				OTHER_LDFLAGS = "-lncurses";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		65B20CDF15DF950600F6A6C9 /* Build configuration list for PBXProject "poi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				65B20CF215DF950700F6A6C9 /* Debug */,
+				65B20CF315DF950700F6A6C9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		65B20CF415DF950700F6A6C9 /* Build configuration list for PBXNativeTarget "poi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				65B20CF515DF950700F6A6C9 /* Debug */,
+				65B20CF615DF950700F6A6C9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 65B20CDC15DF950600F6A6C9 /* Project object */;
+}

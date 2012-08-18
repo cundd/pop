@@ -807,6 +807,11 @@ static PopServer *sharedPopServerInstance = nil;
         }
     }
     
+    // Set the mode to CDPopModeInteractive if POP is compiled as command line tool
+    if (kCDCommandLineTool) {
+        mode = CDPopModeInteractive;
+    }
+    
     // Init
     objectPool = [NSMutableDictionary dictionary];
     [objectPool setValue:[NSNull null] forKey:@"nil"];
@@ -857,7 +862,7 @@ static PopServer *sharedPopServerInstance = nil;
     outputFile = fopen([self.qoqPipeName UTF8String], "w+");
     if(outputFile == NULL){
         NSLog(@"Couldn't open the file '%@'", self.qoqPipeName);
-        [[NSApplication sharedApplication] terminate:nil];
+        [self exit];
     }
     qoqWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor: fileno(outputFile) closeOnDealloc: YES];
     
@@ -902,7 +907,7 @@ static PopServer *sharedPopServerInstance = nil;
         if(commandDelimiterRange.location != NSNotFound){
             // Handle the commands in the queue
             NSArray * commandLines = [commandQueue componentsSeparatedByCharactersInSet:commandDelimiter];
-            for(NSString * commandLineString in commandLines){
+            for(__strong NSString * commandLineString in commandLines){
                 if([commandLineString length]){
                     commandLineString = [self prepareCommandString:commandLineString];
                     [self parseCommandString:commandLineString];
@@ -985,22 +990,29 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
 #endif
     
     // Init the loop
-    // Info: http://libdispatch.macosforge.org/trac/wiki/tutorial#Respondingtoevents:Sources
-    dispatch_queue_t queue	= dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-    
-    dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
-    if(!source){
-        @throw [NSException exceptionWithName:@"No source" reason:@"Source couldn't be created" userInfo:nil];
+    if (!kCDCommandLineTool) {
+        // Info: http://libdispatch.macosforge.org/trac/wiki/tutorial#Respondingtoevents:Sources
+        dispatch_queue_t queue	= dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        
+        dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+        if(!source){
+            @throw [NSException exceptionWithName:@"No source" reason:@"Source couldn't be created" userInfo:nil];
+        }
+        dispatch_source_set_timer(source, 0, timeInterval_gcd, 0);
+        
+        void (^runInteractiveBlock)(void);
+        runInteractiveBlock = ^(void) {
+            [self runInteractiveLoop:nil];
+        };
+        
+        dispatch_source_set_event_handler(source, runInteractiveBlock);
+        dispatch_resume(source);
+    } else {
+        while (TRUE) {
+            [self runInteractiveLoop:nil];
+        }
+        [self exit];
     }
-    dispatch_source_set_timer(source, 0, timeInterval_gcd, 0);
-    
-    void (^runInteractiveBlock)(void);
-    runInteractiveBlock = ^(void) {
-        [self runInteractiveLoop:nil];
-    };
-    
-    dispatch_source_set_event_handler(source, runInteractiveBlock);
-    dispatch_resume(source);
     return TRUE;
 }
 
@@ -1225,11 +1237,11 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     } else if([commandString isEqualToString:@"exit"] || [commandString isEqualToString:@"quit"]){
         [self finishInteractive];
         printf("Goodbye\n");
-        [[NSApplication sharedApplication] terminate:self];
+        [self exit];
     } else {
         @try {
             commandLines = [commandString componentsSeparatedByCharactersInSet:commandDelimiter];
-            for(NSString * commandLineString in commandLines){
+            for(__strong NSString * commandLineString in commandLines){
                 commandLineString = [commandLineString stringByTrimmingCharactersInSet:newlineCharacterSet];
                 if([commandLineString length]){
                     [self parseCommandString:commandLineString];
@@ -1283,6 +1295,16 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     return FALSE;
 }
 
+- (void)exit{
+#if kCDCommandLineTool
+    [self finishInteractive];
+    [self stopTask];
+    exit(0);
+#else
+    [[NSApplication sharedApplication] terminate:nil];
+#endif
+}
+
 -(id)init{
     self = [super init];
     if(self){
@@ -1292,7 +1314,9 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
 }
 
 - (void)dealloc{
+#if !__has_feature(objc_arc)
     [super dealloc];
+#endif
     [self stopTask];
     [self finishInteractive];
 }

@@ -27,6 +27,10 @@
 #import "PopProxyObject.h"
 
 
+#ifndef kCDCommandLineTool
+#define kCDCommandLineTool 0
+#endif
+
 #ifndef kCDInteractiveTimerInterval
 #define kCDInteractiveTimerInterval 0.1
 #endif
@@ -166,6 +170,11 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
  * @return
  */
 @property (readonly) BOOL allowFileInput;
+
+/**
+ * Terminates the application.
+ */
+- (void)exit;
 
 
 /** @name Argument handling */
