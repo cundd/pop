@@ -769,17 +769,6 @@ static PopServer *sharedPopServerInstance = nil;
     }
 }
 
-//- (BOOL)respondsToSelector:(SEL)aSelector {
-//    NSString *selectorName;
-//    if (![super respondsToSelector:aSelector]) {
-//        selectorName = NSStringFromSelector(aSelector);
-//        if(![selectorName hasSuffix:@"Action:"]){
-//            return FALSE;
-//        }
-//    }
-//    return TRUE;
-//}
-
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
     NSMethodSignature * methodSignature = [super methodSignatureForSelector:aSelector];
     if (!methodSignature) {
@@ -800,8 +789,13 @@ static PopServer *sharedPopServerInstance = nil;
     NSString *processArgument;
     for (i = 0; i < processArgumentArray.count; i++) {
         processArgument = [processArgumentArray objectAtIndex:i];
-        if([self allowFileInput] && [processArgument isEqualToString:@"-f"] && processArgumentArray.count > i){
-            taskScriptPath = [processArgumentArray objectAtIndex:i+1];
+        if([self allowFileInput] && [processArgument isEqualToString:@"-f"]){
+            if (processArgumentArray.count > i + 1) {
+                taskScriptPath = [processArgumentArray objectAtIndex:i+1];
+            } else {
+                NSLog(@"No script file given. Usage: poi -f /path/to/script");
+                [self exit:1];
+            }
         } else if([self allowInteractive] && [processArgument isEqualToString:@"-a"]){
             mode = CDPopModeInteractive;
         }
@@ -862,7 +856,7 @@ static PopServer *sharedPopServerInstance = nil;
     outputFile = fopen([self.qoqPipeName UTF8String], "w+");
     if(outputFile == NULL){
         NSLog(@"Couldn't open the file '%@'", self.qoqPipeName);
-        [self exit];
+        [self exit:1];
     }
     qoqWriteHandle = [[NSFileHandle alloc] initWithFileDescriptor: fileno(outputFile) closeOnDealloc: YES];
     
@@ -1295,11 +1289,16 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     return FALSE;
 }
 
+
 - (void)exit{
+    [self exit:0];
+}
+
+- (void)exit:(NSInteger)code{
 #if kCDCommandLineTool
     [self finishInteractive];
     [self stopTask];
-    exit(0);
+    exit(code);
 #else
     [[NSApplication sharedApplication] terminate:nil];
 #endif

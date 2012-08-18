@@ -173,6 +173,12 @@ extern NSString * const PopNotificationNameUnfoundCommandPrefix;
 
 /**
  * Terminates the application.
+ * @param   code    The exit code to send (used in interactive mode)
+ */
+- (void)exit:(NSInteger)code;
+
+/**
+ * Terminates the application.
  */
 - (void)exit;
 
