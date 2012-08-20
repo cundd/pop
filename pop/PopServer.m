@@ -1098,6 +1098,8 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                         lastX--;
                     }
                     move(lastY, lastX);
+                } else {
+                    beep();
                 }
                 noEcho = TRUE;
                 break;
@@ -1107,6 +1109,8 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                 noEcho = TRUE;
                 if (lastX > startX) {
                     lastX--;
+                } else {
+                    beep();
                 }
                 move(lastY, lastX);
                 break;
@@ -1114,13 +1118,17 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
             case KEY_RIGHT: // Right
                 // printw("Right\n");
                 noEcho = TRUE;
-                lastX++;
-                move(lastY, lastX);
+                if (inputBuffer.length > characterPosition) {
+                    lastX++;
+                    move(lastY, lastX);
+                } else {
+                    beep();
+                }
                 break;
                 
             case 10:
             case KEY_ENTER: // Enter
-                mvwprintw(ncWindow, lastY, lastX, "\n");
+                mvwprintw(ncWindow, lastY, startX, "%s\n", [commandString UTF8String]);
                 breakLoop = TRUE;
                 break;
                 
@@ -1298,7 +1306,7 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
 #if kCDCommandLineTool
     [self finishInteractive];
     [self stopTask];
-    exit(code);
+    exit((int)code);
 #else
     [[NSApplication sharedApplication] terminate:nil];
 #endif
