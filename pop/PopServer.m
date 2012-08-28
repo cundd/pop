@@ -977,7 +977,15 @@ static PopServer *sharedPopServerInstance = nil;
     qoqWriteHandle = [NSFileHandle fileHandleWithStandardOutput];
     
     // Print the startup info
-    say(@"POP Interactive Console (Version 0.1.0)\n\
+    say(@"\
+              _     \n\
+  _ __   ___ (_)    \n\
+ | '_ \\ / _ \\| |    \n\
+ | |_) | (_) | |    \n\
+ | .__/ \\___/|_|    \n\
+ |_|                \n\
+                    \n\
+POP Interactive Console (Version 0.1.0)\n\
 Use \"help\", \"copyright\" or \"license\" for more information.\n");
 #if USE_NCURSES
     wrefresh([self getNCWindow]);
@@ -1057,19 +1065,17 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                 commandString = [NSMutableString stringWithString:inputBuffer];
                 mvwprintw(ncWindow, lastY, startX, [inputBuffer UTF8String]);
                 lastX = startX + (int)[commandString length];
-                
-                
                 noEcho = TRUE;
                 break;
                 
             case KEY_UP:
                 // printw("Up\n");
                 move(lastY, startX);
-                clrtoeol();
-                wrefresh(ncWindow);
                 if (!lastCommand) {
                     beep();
                 } else {
+                    clrtoeol();
+                    wrefresh(ncWindow);
                     commandString = [NSMutableString stringWithString:lastCommand];
                     mvwprintw(ncWindow, lastY, startX, [lastCommand UTF8String]);
                     lastX = startX + (int)[commandString length];
@@ -1105,7 +1111,7 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                 break;
                 
             case KEY_LEFT: // Left
-                // printw("Left\n");
+//                mvwprintw(ncWindow, 0, 0, "Left");
                 noEcho = TRUE;
                 if (lastX > startX) {
                     lastX--;
@@ -1137,33 +1143,32 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                 break;
                 
             default:
+                // Populate the inputBuffer
+                characterPosition = lastX - startX;
+                if ([inputBuffer length] > characterPosition) {
+                    [inputBuffer insertString:[NSString stringWithFormat:@"%c", character]
+                                      atIndex:characterPosition];
+                } else {
+                    [inputBuffer appendFormat:@"%c", character];
+                }
+                
+                // Populate the commandString
+                if ([commandString length] > characterPosition) {
+                    [commandString insertString:[NSString stringWithFormat:@"%c", character]
+                                        atIndex:characterPosition];
+                } else {
+                    [commandString appendFormat:@"%c", character];
+                }
+                
+                // Draw the typed character
+                // mvwprintw(ncWindow, lastY, lastX, "%c", character);
+                mvwprintw(ncWindow, lastY, startX, "%s", [commandString UTF8String]);
+                lastX++;
+
                 break;
         }
         if (breakLoop) {
             break;
-        }
-        
-        if (!noEcho) {
-            // Populate the inputBuffer
-            characterPosition = lastX - startX;
-            if ([inputBuffer length] > characterPosition) {
-                [inputBuffer insertString:[NSString stringWithFormat:@"%c", character]
-                                  atIndex:characterPosition];
-            } else {
-                [inputBuffer appendFormat:@"%c", character];
-            }
-            
-            // Populate the commandString
-            if ([commandString length] > characterPosition) {
-                [commandString insertString:[NSString stringWithFormat:@"%c", character]
-                                  atIndex:characterPosition];
-            } else {
-                [commandString appendFormat:@"%c", character];
-            }
-            
-            // Draw the typed character
-            mvwprintw(ncWindow, lastY, lastX, "%c", character);
-            lastX++;
         }
         mvwprintw(ncWindow, windowHeight - 1, windowWidth - 4, "%i", character);
         mvwprintw(ncWindow, 1, windowWidth - 34, "Enter (help) for more information");

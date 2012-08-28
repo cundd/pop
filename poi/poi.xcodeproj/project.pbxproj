@@ -12,6 +12,7 @@
 		65B20CF115DF950700F6A6C9 /* poi.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 65B20CF015DF950700F6A6C9 /* poi.1 */; };
 		65B20D0215DF953900F6A6C9 /* PopServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 65B20D0115DF953900F6A6C9 /* PopServer.m */; };
 		65B20D0815DF99EC00F6A6C9 /* PoiAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65B20D0715DF99EC00F6A6C9 /* PoiAppDelegate.m */; };
+		65B9A60415EA81C400A93D52 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65B9A60315EA81C400A93D52 /* AppKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,6 +38,7 @@
 		65B20D0115DF953900F6A6C9 /* PopServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PopServer.m; path = ../../pop/PopServer.m; sourceTree = "<group>"; };
 		65B20D0615DF99EC00F6A6C9 /* PoiAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PoiAppDelegate.h; sourceTree = SOURCE_ROOT; };
 		65B20D0715DF99EC00F6A6C9 /* PoiAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PoiAppDelegate.m; sourceTree = SOURCE_ROOT; };
+		65B9A60315EA81C400A93D52 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = ../../../../../../../../System/Library/Frameworks/AppKit.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +47,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				65B20CEA15DF950700F6A6C9 /* Foundation.framework in Frameworks */,
+				65B9A60415EA81C400A93D52 /* AppKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +74,7 @@
 		65B20CE815DF950600F6A6C9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				65B9A60315EA81C400A93D52 /* AppKit.framework */,
 				65B20CE915DF950700F6A6C9 /* Foundation.framework */,
 			);
 			name = Frameworks;
@@ -255,6 +259,7 @@
 				65B20CF615DF950700F6A6C9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
