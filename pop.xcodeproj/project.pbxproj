@@ -28,6 +28,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		65174DCF1607AFE80092AD36 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 65174DCB1607AFE70092AD36 /* NodeExample.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 65174DAA1607AFE70092AD36;
+			remoteInfo = NodeExample;
+		};
 		6557EF17155181A900830335 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6557EEE9155181A800830335 /* Project object */;
@@ -60,6 +67,7 @@
 
 /* Begin PBXFileReference section */
 		6504E47A1571791000243F49 /* qoq */ = {isa = PBXFileReference; lastKnownFileType = folder; path = qoq; sourceTree = "<group>"; };
+		65174DCB1607AFE70092AD36 /* NodeExample.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = NodeExample.xcodeproj; path = NodeExample/NodeExample.xcodeproj; sourceTree = "<group>"; };
 		6517B40C15B1A52F00C97411 /* CDApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDApplication.h; sourceTree = "<group>"; };
 		6517B40D15B1A52F00C97411 /* CDApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDApplication.m; sourceTree = "<group>"; };
 		6517B41015B1A73E00C97411 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -113,6 +121,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		65174DCC1607AFE70092AD36 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				65174DD01607AFE80092AD36 /* NodeExample.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		6557EEE7155181A800830335 = {
 			isa = PBXGroup;
 			children = (
@@ -123,6 +139,7 @@
 				658A04F7157A3B300079D84F /* README.md */,
 				65B20CF715DF950700F6A6C9 /* poi.xcodeproj */,
 				657557E41595C5BC00B1FCEF /* SampleApplication.xcodeproj */,
+				65174DCB1607AFE70092AD36 /* NodeExample.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -284,6 +301,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 65174DCC1607AFE70092AD36 /* Products */;
+					ProjectRef = 65174DCB1607AFE70092AD36 /* NodeExample.xcodeproj */;
+				},
+				{
 					ProductGroup = 65B20CF815DF950700F6A6C9 /* Products */;
 					ProjectRef = 65B20CF715DF950700F6A6C9 /* poi.xcodeproj */;
 				},
@@ -301,6 +322,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		65174DD01607AFE80092AD36 /* NodeExample.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = NodeExample.app;
+			remoteRef = 65174DCF1607AFE80092AD36 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		657557EA1595C5BD00B1FCEF /* SampleApplication.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;

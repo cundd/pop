@@ -1,0 +1,4 @@
+{
+	"PrincipalClass": "StandardController",
+	"TerminateIfServerIsNotAlive": true
+}

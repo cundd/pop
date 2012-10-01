@@ -6,7 +6,7 @@ namespace Qoq;
  */
 
 /**
- * The rect wrapper object.
+ * The point wrapper object.
  */
 class Point implements ValueObjectInterface {
 	/**

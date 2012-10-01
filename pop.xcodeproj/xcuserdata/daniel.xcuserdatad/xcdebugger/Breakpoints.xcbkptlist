@@ -7,25 +7,12 @@
          shouldBeEnabled = "Yes"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
-         filePath = "pop/NSWindow+CDWindow.m"
-         timestampString = "358112118.817641"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "17"
-         endingLineNumber = "17"
-         landmarkName = "@implementation NSWindow(CDWindow)"
-         landmarkType = "3">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "Yes"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
          filePath = "pop/PopServer.m"
-         timestampString = "366714579.674011"
+         timestampString = "369604358.251636"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "598"
-         endingLineNumber = "598"
+         startingLineNumber = "591"
+         endingLineNumber = "591"
          landmarkName = "-parseCommandString:"
          landmarkType = "5">
       </FileBreakpoint>

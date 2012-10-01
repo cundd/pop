@@ -1,0 +1,48 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'install' ]
+2 info using npm@1.1.61
+3 info using node@v0.8.9
+4 verbose read json /Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/joj/Packages/Application/SampleApplication/Classes/Controller/package.json
+5 warn package.json SampleApplication@0.1.0 No README.md file found!
+6 verbose readDependencies using package.json deps
+7 verbose install where, deps [ '/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/joj/Packages/Application/SampleApplication/Classes/Controller',
+7 verbose install   [ 'Joj' ] ]
+8 verbose from cache /Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/joj/Packages/Application/SampleApplication/Classes/Controller/package.json
+9 info preinstall SampleApplication@0.1.0
+10 verbose from cache /Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/joj/Packages/Application/SampleApplication/Classes/Controller/package.json
+11 verbose readDependencies using package.json deps
+12 verbose cache add [ 'Joj@*', null ]
+13 silly cache add name=undefined spec="Joj@*" args=["Joj@*",null]
+14 verbose parsed url { pathname: 'Joj@*', path: 'Joj@*', href: 'Joj@*' }
+15 silly cache add name="Joj" spec="*" args=["Joj","*"]
+16 verbose parsed url { pathname: '*', path: '*', href: '*' }
+17 verbose addNamed [ 'Joj', '*' ]
+18 verbose addNamed [ null, '' ]
+19 silly lockFile 9dc7813b-Joj Joj@*
+20 verbose lock Joj@* /Users/daniel/.npm/9dc7813b-Joj.lock
+21 silly addNameRange { name: 'Joj', range: '', hasData: false }
+22 verbose url raw Joj
+23 verbose url resolving [ 'https://registry.npmjs.org/', './Joj' ]
+24 verbose url resolved https://registry.npmjs.org/Joj
+25 info trying registry request attempt 1 at 21:19:46
+26 http GET https://registry.npmjs.org/Joj
+27 http 404 https://registry.npmjs.org/Joj
+28 silly registry.get cb [ 404,
+28 silly registry.get   { server: 'CouchDB/1.2.0 (Erlang OTP/R15B)',
+28 silly registry.get     date: 'Thu, 27 Sep 2012 19:19:35 GMT',
+28 silly registry.get     'content-type': 'application/json',
+28 silly registry.get     'content-length': '52',
+28 silly registry.get     'cache-control': 'must-revalidate' } ]
+29 silly lockFile 9dc7813b-Joj Joj@*
+30 error 404 'Joj' is not in the npm registry.
+30 error 404 You should bug the author to publish it
+30 error 404
+30 error 404 Note that you can also install from a
+30 error 404 tarball, folder, or http url, or git url.
+31 error System Darwin 12.2.0
+32 error command "node" "/usr/local/bin/npm" "install"
+33 error cwd /Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/joj/Packages/Application/SampleApplication/Classes/Controller
+34 error node -v v0.8.9
+35 error npm -v 1.1.61
+36 error code E404
+37 verbose exit [ 1, true ]

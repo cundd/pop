@@ -1,0 +1,188 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"sha",
+				"sharedInstance"
+			],
+			[
+				"Pop",
+				"PopServer"
+			],
+			[
+				"Tx_Ire",
+				"tx_iresults"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 49.0,
+		"selected_items":
+		[
+			[
+				"Package Control: inst",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: ins",
+				"Package Control: Install Package"
+			],
+			[
+				"",
+				"Build: Cancel"
+			]
+		],
+		"width": 435.0
+	},
+	"console":
+	{
+		"height": 321.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeREPL/config/PHP/Default.sublime-commands",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeREPL/package-metadata.json",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeREPL/Main.sublime-menu",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeREPL/Context.sublime-menu",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeREPL/config/PHP/Main.sublime-menu",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeREPL/lang_integration.py",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeREPL/config/Ruby/Main.sublime-menu",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeREPL/config/Ruby/Default.sublime-commands",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/User/Objective-C.sublime-build",
+		"/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/PopServer.m",
+		"/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/qoq/Packages/Framework/Qoq/Classes/Controller/AbstractController.php",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/Volumes/Daten HD/Users/daniel/Sites/Resources/pop/pop/PopServer.h",
+		"/Applications/MAMP/web_typo3_v5/Packages/Framework/Iresults/Classes/Core.php",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/User/Default (OSX).sublime-keymap",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeCodeIntel/Default (OSX).sublime-mousemap",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeCodeIntel/Default (OSX).sublime-keymap",
+		"/Users/daniel/Library/Application Support/Sublime Text 2/Packages/SublimeCodeIntel/Base File.sublime-settings",
+		"/Applications/MAMP/web_typo3_v5/Packages/Framework/Iresults/Classes/Iresults.php",
+		"/Users/daniel/Downloads/fuelphp-1/fuel/app/classes/controller/welcome.php",
+		"/Applications/MAMP/web_typo3_v5/Packages/Framework/Iresults/Classes/Menu.php",
+		"/Applications/MAMP/web_typo3_v5/Packages/Framework/Iresults/Classes/Helpers/ObjectStorageSortHelper.php"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"source.",
+			"nslog"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 230.0
+	},
+	"replace":
+	{
+		"height": 0.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"packagecontrol",
+				"pop/qoq/Packages/Framework/Qoq/Classes/Controller/AbstractController.php"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 230.0,
+	"status_bar_visible": true
+}

@@ -61,7 +61,7 @@
 // WARNING: Some Objective-C objects (i.e. NSURL) must not be print, 
 // before they are initialized.
 #ifndef SHOW_DEBUG_INFO
-#define SHOW_DEBUG_INFO 0
+#define SHOW_DEBUG_INFO 1
 #endif
 
 

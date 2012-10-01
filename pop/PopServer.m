@@ -419,6 +419,7 @@ static PopServer *sharedPopServerInstance = nil;
     NSMethodSignature *signature;
     NSUInteger returnValueLength;
     id object;
+    NSString *sendValue;
 //    const char NSObjCNoType = 0;
 //    const char NSObjCVoidType = 'v';
 //    const char NSObjCCharType = 'c';
@@ -454,19 +455,21 @@ static PopServer *sharedPopServerInstance = nil;
         buffer = (char *)malloc(returnValueLength);
         [invocation getReturnValue:buffer];
         if (buffer) {
-            [self sendObject:@"(bool)1"];
+            sendValue = @"(bool)1";
         } else {
-            [self sendObject:@"(bool)0"];
+            sendValue = @"(bool)0";
         }
+        [self sendObject:sendValue];
     } else if(strcmp([signature methodReturnType], "f") == 0){ // Numeric
         float *buffer;
         buffer = (float *)malloc(returnValueLength);
         [invocation getReturnValue:buffer];
         if (buffer) {
-            [self sendObject:[NSString stringWithFormat:@"(float)%.6f", *buffer]];
+            sendValue = [NSString stringWithFormat:@"(float)%.6f", *buffer];
         } else {
-            [self sendObject:@"(float)0"];
+            sendValue = @"(float)0";
         }
+        [self sendObject:sendValue];
     } else {
         [self sendVoid];
     }
@@ -801,6 +804,10 @@ static PopServer *sharedPopServerInstance = nil;
         }
     }
     
+#if __has_feature(objc_arc)
+    NSLog(@"Automatic Reference Counting may not work correctly (CLANG_ENABLE_OBJC_ARC)");
+#endif
+    
     // Set the mode to CDPopModeInteractive if POP is compiled as command line tool
     if (kCDCommandLineTool) {
         mode = CDPopModeInteractive;
@@ -829,17 +836,6 @@ static PopServer *sharedPopServerInstance = nil;
         return;
     }
     
-    // Register for receiving data
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadCompletionNotification object:nil];
-    
-    // Register 
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stopTask:) name:NSApplicationWillTerminateNotification object:nil];
-    
-    // Register for task termination
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:nil];
-    
-    // Register for application termination
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(finishInteractive:) name:NSApplicationWillTerminateNotification object:nil];
     
 #if SHOW_DEBUG_INFO > 1
     NSLog(@"Call script %@ with arguments: %@", self.taskLaunchPath, self.taskArguments);
@@ -871,6 +867,20 @@ static PopServer *sharedPopServerInstance = nil;
     [task setArguments:self.taskArguments];
     [task setCurrentDirectoryPath:@"~"];
     
+    
+    // Register for receiving data
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveData:) name:NSFileHandleReadCompletionNotification object:popReadHandle];
+    
+    // Register
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stopTask:) name:NSApplicationWillTerminateNotification object:task];
+    
+    // Register for task termination
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(taskDidTerminate:) name:NSTaskDidTerminateNotification object:task];
+    
+    // Register for application termination
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(finishInteractive:) name:NSApplicationWillTerminateNotification object:task];
+    
+    
     // Set the environment
     NSDictionary *env = [NSDictionary dictionaryWithObjectsAndKeys:
                          [NSNumber numberWithInt:processInfo.processIdentifier], @"popServerPid", 
@@ -890,7 +900,6 @@ static PopServer *sharedPopServerInstance = nil;
     NSData * data = [[aNotification userInfo] objectForKey:NSFileHandleNotificationDataItem];
     NSString * justReceivedCommand;
     targetIsClass = FALSE;
-    
     
     if([data length]){
         justReceivedCommand = [self cleanupString:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
@@ -917,18 +926,14 @@ static PopServer *sharedPopServerInstance = nil;
 }
 
 - (void)taskDidTerminate:(NSNotification *)notif{
-	int status = [task terminationStatus];
-    
-#if SHOW_DEBUG_INFO > 1
+#if SHOW_DEBUG_INFO
+    int status = [task terminationStatus];
 	if(status == 0){
 		NSLog(@"Task succeeded.");
 	} else {
 		NSLog(@"Task failed.");
 	}
 #endif
-    if(status){
-        
-    }
 }
 
 - (void)stopTask{
@@ -1039,7 +1044,6 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     int character;
     int windowWidth, windowHeight, lastX, lastY, characterPosition;
     BOOL breakLoop = FALSE;
-    BOOL noEcho = FALSE;
     WINDOW * ncWindow;
     NSMutableString *inputBuffer = [NSMutableString string];
     NSMutableString *commandString = [NSMutableString string];
@@ -1049,10 +1053,7 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
     wrefresh(ncWindow);
     
     while ((character = wgetch(ncWindow)) != ERR) {
-        if (!noEcho) {
-            getyx(ncWindow, lastY, lastX);
-        }
-        noEcho = FALSE;
+        getyx(ncWindow, lastY, lastX);
         breakLoop = FALSE;
         characterPosition = lastX - startX;
         
@@ -1065,7 +1066,6 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                 commandString = [NSMutableString stringWithString:inputBuffer];
                 mvwprintw(ncWindow, lastY, startX, [inputBuffer UTF8String]);
                 lastX = startX + (int)[commandString length];
-                noEcho = TRUE;
                 break;
                 
             case KEY_UP:
@@ -1080,7 +1080,6 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                     mvwprintw(ncWindow, lastY, startX, [lastCommand UTF8String]);
                     lastX = startX + (int)[commandString length];
                 }
-                noEcho = TRUE;
                 break;
                
             case 127:
@@ -1107,12 +1106,10 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                 } else {
                     beep();
                 }
-                noEcho = TRUE;
                 break;
                 
             case KEY_LEFT: // Left
 //                mvwprintw(ncWindow, 0, 0, "Left");
-                noEcho = TRUE;
                 if (lastX > startX) {
                     lastX--;
                 } else {
@@ -1121,15 +1118,24 @@ Use \"help\", \"copyright\" or \"license\" for more information.\n");
                 move(lastY, lastX);
                 break;
                 
-            case KEY_RIGHT: // Right
-                // printw("Right\n");
-                noEcho = TRUE;
-                if (inputBuffer.length > characterPosition) {
+            case KEY_RIGHT: //
+//                mvwprintw(ncWindow, 0, 0, "Right");
+                if (commandString.length > characterPosition) {
                     lastX++;
                     move(lastY, lastX);
                 } else {
                     beep();
                 }
+                break;
+            
+            case KEY_HOME: // Home
+                lastX = 0;
+                move(lastY, lastX);
+                break;
+                
+            case KEY_END: // End
+                lastX = (int)inputBuffer.length - 1;
+                move(lastY, lastX);
                 break;
                 
             case 10:
